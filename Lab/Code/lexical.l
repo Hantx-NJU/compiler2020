@@ -33,15 +33,15 @@ ELSE else
 WHILE while
 
 %%
-{SPACE}  {printf("SPACE\n");}
+{SPACE}  {}
 {SEMI}  {printf("SEMI\n");}
 {COMMA} {printf("COMMA\n");}
 {ASSIGNOP}  {printf("ASSIGNOP\n");}
 {RELOP} {printf("RELPO:%s\n", yytext);}
-{PLUS}  {printf("PLUS\n");}
-{MINUS} {printf("MINUS\n");}
-{STAR}  {printf("STAR\n");}
-{DIV}   {printf("DIV\n");}
+{PLUS}  {return ADD;}
+{MINUS} {return SUB;}
+{STAR}  {return MUL;}
+{DIV}   {return DIV;}
 {AND}   {printf("AND\n");}
 {OR}    {printf("OR\n");}
 {DOT}   {printf("DOT\n");}
@@ -53,8 +53,8 @@ WHILE while
 {RB}    {printf("RB\n");}
 {LC}    {printf("LC\n");}
 {RC}    {printf("RC\n");}
-{INT}   {printf("INT: %d\n", atoi(yytext));}
-{FLOAT}   {printf("FLOAT: %f\n", atof(yytext));}
+{INT}   {yylval.type_int = atoi(yytext);    return INT;}
+{FLOAT}   {yylval.type_float = atof(yytext);   return FLOAT;}
 {ID}   {printf("ID: %s\n", yytext);}
 .   {printf("Error type A at Line %d: Mysterious characters \'%s\'\n",yylineno, yytext);}
 
