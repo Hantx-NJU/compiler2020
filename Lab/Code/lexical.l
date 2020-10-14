@@ -2,7 +2,6 @@
 digit   [0-9]
 digits [0-9]+
 letter  [a-zA-z]
-letter_ [a-zA-Z_]
 space   " "|\n|\t|\r
 %%
 ([1-9]+{digit}*)|0[0-7]*|0[Xx][a-fA-F]+    {printf("INT\n");}
@@ -31,7 +30,7 @@ space   " "|\n|\t|\r
 "if"    {printf("IF\n");}
 "else"  {printf("ELSE\n");}
 "while" {printf("WHILE\n");}
-{letter_}+{letter}* {printf("ID\n");}
+[_a-zA-Z][_a-zA-Z0-9]* {printf("ID, %s\n",yytext);}
 {space} {}
 .   {printf("Error type A at Line %d : Mysterious characters  \'%s\'\n", yylineno, yytext);}
 %%
