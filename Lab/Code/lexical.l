@@ -4,8 +4,8 @@ digits [0-9]+
 letter  [a-zA-z]
 space   " "|\n|\t|\r
 %%
-([1-9]+{digit}*)|0[0-7]*|0[Xx][a-fA-F]+    {printf("INT\n");}
-({digits}\.{digits})|(({digit}*\.?{digits})|{digits}\.)[Ee][+-]?{digits}    {printf("FLOAT\n");}
+([1-9]+{digit}*)|0[0-7]*|0[Xx][a-fA-F]+    {printf("INT, %s\n", yytext);}
+({digits}\.{digits})|(({digit}*\.?{digits})|{digits}\.)[Ee][+-]?{digits}    {printf("FLOAT, %s\n", yytext);}
 ";"  {printf("SEMI\n");}
 ","   {printf("COMMA\n");}
 "=" {printf("ASSIGNOP\n");}
