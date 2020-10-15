@@ -370,8 +370,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 30
-#define YY_END_OF_BUFFER 31
+#define YY_NUM_RULES 31
+#define YY_END_OF_BUFFER 32
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -381,10 +381,10 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[75] =
     {   0,
-        0,    0,   31,   29,   28,   28,   14,   29,   16,   17,
+        0,    0,   32,   30,   28,   29,   14,   30,   16,   17,
         9,    7,    4,    8,   13,   10,    1,    1,    3,    6,
         5,    6,   27,   18,   19,   27,   27,   27,   27,   27,
-       27,   20,   29,   21,    6,   11,    0,    0,    1,    0,
+       27,   20,   30,   21,    6,   11,    0,    0,    1,    0,
         0,    0,    1,    1,   27,   27,   27,   24,   27,   27,
        27,   27,   12,    2,    0,    2,    1,   27,   27,   15,
        27,   27,   27,   25,   27,   27,   27,   27,   27,   27,
@@ -511,10 +511,10 @@ static const flex_int16_t yy_chk[202] =
     } ;
 
 /* Table of booleans, true if rule could match eol. */
-static const flex_int32_t yy_rule_can_match_eol[31] =
+static const flex_int32_t yy_rule_can_match_eol[32] =
     {   0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,     };
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,     };
 
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
@@ -531,7 +531,15 @@ int yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
 #line 1 "lexical.l"
-#line 535 "lex.yy.c"
+#line 3 "lexical.l"
+#include "syntax.tab.h"
+int yycolumn = 1;
+#define YY_USER_ACTION  yylloc.first_line = yylloc.last_line = yylineno; \
+    yylloc.first_column = yycolumn; \
+    yylloc.last_column = yycolumn + yyleng - 1; \
+    yycolumn += yyleng;
+#line 542 "lex.yy.c"
+#line 543 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -748,9 +756,9 @@ YY_DECL
 		}
 
 	{
-#line 6 "lexical.l"
+#line 14 "lexical.l"
 
-#line 754 "lex.yy.c"
+#line 762 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -819,156 +827,161 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 7 "lexical.l"
-{printf("INT, %s\n", yytext);}
+#line 15 "lexical.l"
+{printf("INT, %s\n", yytext);yylval.type_int = atoi(yytext);    return INT;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 8 "lexical.l"
-{printf("FLOAT, %s\n", yytext);}
+#line 16 "lexical.l"
+{printf("FLOAT, %s\n", yytext);yylval.type_float = atof(yytext);   return FLOAT;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 9 "lexical.l"
+#line 17 "lexical.l"
 {printf("SEMI\n");}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 10 "lexical.l"
+#line 18 "lexical.l"
 {printf("COMMA\n");}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 11 "lexical.l"
+#line 19 "lexical.l"
 {printf("ASSIGNOP\n");}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 12 "lexical.l"
+#line 20 "lexical.l"
 {printf("RELOP\n");}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 13 "lexical.l"
-{printf("PLUS\n");}
+#line 21 "lexical.l"
+{printf("PLUS\n");return ADD;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 14 "lexical.l"
-{printf("MINUS\n");}
+#line 22 "lexical.l"
+{printf("MINUS\n");return SUB;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 15 "lexical.l"
-{printf("STAR\n");}
+#line 23 "lexical.l"
+{printf("STAR\n");return MUL;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 16 "lexical.l"
-{printf("DIV\n");}
+#line 24 "lexical.l"
+{printf("DIV\n");return DIV;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 17 "lexical.l"
+#line 25 "lexical.l"
 {printf("AND\n");}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 18 "lexical.l"
+#line 26 "lexical.l"
 {printf("OR\n");}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 19 "lexical.l"
+#line 27 "lexical.l"
 {printf("DOT\n");}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 20 "lexical.l"
+#line 28 "lexical.l"
 {printf("NOT\n");}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 21 "lexical.l"
+#line 29 "lexical.l"
 {printf("TYPE\n");}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 22 "lexical.l"
+#line 30 "lexical.l"
 {printf("LP\n");}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 23 "lexical.l"
+#line 31 "lexical.l"
 {printf("RP\n");}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 24 "lexical.l"
+#line 32 "lexical.l"
 {printf("LB\n");}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 25 "lexical.l"
+#line 33 "lexical.l"
 {printf("RB\n");}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 26 "lexical.l"
+#line 34 "lexical.l"
 {printf("LC\n");}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 27 "lexical.l"
+#line 35 "lexical.l"
 {printf("RC\n");}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 28 "lexical.l"
+#line 36 "lexical.l"
 {printf("STRUCT\n");}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 29 "lexical.l"
+#line 37 "lexical.l"
 {printf("RETURN\n");}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 30 "lexical.l"
+#line 38 "lexical.l"
 {printf("IF\n");}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 31 "lexical.l"
+#line 39 "lexical.l"
 {printf("ELSE\n");}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 32 "lexical.l"
+#line 40 "lexical.l"
 {printf("WHILE\n");}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 33 "lexical.l"
+#line 41 "lexical.l"
 {printf("ID, %s\n",yytext);}
 	YY_BREAK
 case 28:
-/* rule 28 can match eol */
 YY_RULE_SETUP
-#line 34 "lexical.l"
+#line 42 "lexical.l"
 {}
 	YY_BREAK
 case 29:
+/* rule 29 can match eol */
 YY_RULE_SETUP
-#line 35 "lexical.l"
-{printf("Error type A at Line %d : Mysterious characters  \'%s\'\n", yylineno, yytext);}
+#line 43 "lexical.l"
+{yycolumn = 1;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 36 "lexical.l"
+#line 44 "lexical.l"
+{printf("Error type A at Line %d : Mysterious characters  \'%s\'\n", yylineno, yytext);}
+	YY_BREAK
+case 31:
+YY_RULE_SETUP
+#line 45 "lexical.l"
 ECHO;
 	YY_BREAK
-#line 972 "lex.yy.c"
+#line 985 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1985,15 +1998,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 36 "lexical.l"
+#line 45 "lexical.l"
 
-int main(int argc, char** argv) {
-    if(argc > 1) {
-        if(! (yyin = fopen(argv[1], "r"))) {
-            perror(argv[1]);
-            return 1;   
-        }
-    }
-    yylex();
-    return 0;
-}
+
