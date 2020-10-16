@@ -34,28 +34,28 @@ WHILE while
 
 %%
 {SPACE}  {}
-{SEMI}  {printf("SEMI\n");}
-{COMMA} {printf("COMMA\n");}
-{ASSIGNOP}  {printf("ASSIGNOP\n");}
-{RELOP} {printf("RELPO:%s\n", yytext);}
-{PLUS}  {return ADD;}
-{MINUS} {return SUB;}
-{STAR}  {return MUL;}
+{SEMI}  {return SEMI;}
+{COMMA} {return COMMA;}
+{ASSIGNOP}  {return ASSIGNOP;}
+{RELOP} {return RELOP;}
+{PLUS}  {return PLUS;}
+{MINUS} {return MINUS;}
+{STAR}  {return STAR;}
 {DIV}   {return DIV;}
-{AND}   {printf("AND\n");}
-{OR}    {printf("OR\n");}
-{DOT}   {printf("DOT\n");}
-{NOT}   {printf("NOT\n");}
-{TYPE}  {printf("TYPE: %s\n", yytext);}
-{LP}    {printf("LP\n");}
-{RP}    {printf("RP\n");}
-{LB}    {printf("LB\n");}
-{RB}    {printf("RB\n");}
-{LC}    {printf("LC\n");}
-{RC}    {printf("RC\n");}
-{INT}   {yylval.type_int = atoi(yytext);    return INT;}
-{FLOAT}   {yylval.type_float = atof(yytext);   return FLOAT;}
-{ID}   {printf("ID: %s\n", yytext);}
+{AND}   {return AND;}
+{OR}    {return OR;}
+{DOT}   {return DOT;}
+{NOT}   {return NOT;}
+{TYPE}  {return TYPE;}
+{LP}    {return LP;}
+{RP}    {return RP;}
+{LB}    {return LB;}
+{RB}    {return RB;}
+{LC}    {return LC;}
+{RC}    {return RC;}
+{INT}   {return INT;}
+{FLOAT}   {return FLOAT;}
+{ID}   {return ID;}
 .   {printf("Error type A at Line %d: Mysterious characters \'%s\'\n",yylineno, yytext);}
 
 
