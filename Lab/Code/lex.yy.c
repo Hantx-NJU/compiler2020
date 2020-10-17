@@ -828,12 +828,12 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 15 "lexical.l"
-{printf("INT, %s\n", yytext); yylval.type_int = atoi(yytext);    return INT;}
+{printf("INT, %s\n", yytext);    return INT;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
 #line 16 "lexical.l"
-{printf("FLOAT, %s\n", yytext); yylval.type_float = atof(yytext);   return FLOAT;}
+{printf("FLOAT, %s\n", yytext);    return FLOAT;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP

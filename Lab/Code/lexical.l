@@ -12,8 +12,8 @@ digits [0-9]+
 letter  [a-zA-z]
 space   " "|\t|\r
 %%
-([1-9]+{digit}*)|0[0-7]*|0[Xx][a-fA-F]+    {printf("INT, %s\n", yytext); yylval.type_int = atoi(yytext);    return INT;}
-({digits}\.{digits})|(({digit}*\.?{digits})|{digits}\.)[Ee][+-]?{digits}    {printf("FLOAT, %s\n", yytext); yylval.type_float = atof(yytext);   return FLOAT;}
+([1-9]+{digit}*)|0[0-7]*|0[Xx][a-fA-F]+    {  return INT;}
+({digits}\.{digits})|(({digit}*\.?{digits})|{digits}\.)[Ee][+-]?{digits}    {  return FLOAT;}
 ";"  {return SEMI;}
 ","   {return COMMA;}
 "=" {return ASSIGNOP;}
@@ -38,7 +38,7 @@ space   " "|\t|\r
 "if"    {return IF;}
 "else"  {return ELSE;}
 "while" {return WHILE;}
-[_a-zA-Z][_a-zA-Z0-9]* {printf("ID, %s\n",yytext); return ID;}
+[_a-zA-Z][_a-zA-Z0-9]* {return ID;}
 {space} {}
 \n {yycolumn = 1;}
 .   {printf("Error type A at Line %d : Mysterious characters  \'%s\'\n", yylineno, yytext);}

@@ -1,29 +1,24 @@
 %{
 #include <stdio.h>
+#include "syntax.tab.h"
 #include "lex.yy.c"
+#include "tree.c"
 extern int yylex (void);
+void synerror(char* msg);
 int yyerror(char* msg);
 %}
 
-/*use location information*/
+/*  use location information */
 %locations
 
-/*declared types*/
-%union  {
-    int type_int;
-    float type_float;
+/* declared types */
+%union {
+    Node *node;
 }
 
 /* declared tokens */
-%token <type_int> INT
-%token <type_float> FLOAT
-%token ID SEMI COMMA ASSIGNOP RELOP PLUS MINUS STAR DIV
-%token AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
-
-/* declared non-terminals */
-//%type Program ExtDefList ExtDef ExtDecList Specifier StructSpecifier
-//%type OptTag Tag VarDec FunDec VarList ParamDec CompSt StmtList Stmt
-//%type DefList Def DecList Dec Exp
+%token <node> INT FLOAT ID SEMI COMMA ASSIGNOP RELOP PLUS MINUS STAR DIV
+%token <node> AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -38,17 +33,24 @@ int yyerror(char* msg);
 
 %%
 /* High-level Definitions */
-Program     : ExtDefList
+Program     : ExtDefList {
+    $$ = NewNode(@$.first_line,  "Program", 0, NULL);
+    Add($$, $1);
+    root = $$;
+}
             ;
-ExtDefList  : ExtDef ExtDefList
+ExtDefList  : ExtDef ExtDefList{
+    
+}
             | /* empty */
             ;
-ExtDef      : Specifier ExtDecList  SEMI
+ExtDef      : Specifier ExtDecList SEMI
             | Specifier SEMI
             | Specifier FunDec CompSt
+            | Specifier error SEMI                {synerror("syntax error, the global variable cannot be initialized in the definition.");}
             ;
 ExtDecList  : VarDec
-            | VarDec  COMMA ExtDefList
+            | VarDec COMMA ExtDefList
             ;
 
 /* Specifiers */
@@ -57,6 +59,7 @@ Specifier       : TYPE
                 ;
 StructSpecifier : STRUCT OptTag LC DefList RC
                 | STRUCT Tag
+                | STRUCT OptTag LC DefList error RC     {synerror("syntax error, near 'RC'");}
                 ;
 OptTag          : ID
                 | /* empty */
@@ -67,19 +70,21 @@ Tag             : ID
 /* Declarators */
 VarDec      : ID
             | VarDec LB INT RB
+            | VarDec LB INT error RB            {synerror("syntax error, near 'RB'");}
             ;
 FunDec      : ID LP VarList RP
             | ID LP RP
+            | error RP                  {synerror("syntax error, in function definition");}
             ;
 VarList     : ParamDec COMMA VarList
             | ParamDec
+            | ParamDec error COMMA VarList      {synerror("syntax error, near ','");}  
             ;
 ParamDec    : Specifier VarDec
             ;
 
 /* Statements */
 CompSt      : LC DefList StmtList RC
-            | error RC
             ;
 StmtList    : Stmt StmtList
             | /* empty */
@@ -90,7 +95,8 @@ Stmt        : Exp SEMI
             | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE
             | IF LP Exp RP Stmt ELSE Stmt
             | WHILE LP Exp RP Stmt
-            | error SEMI
+            | Exp error SEMI                            {synerror("syntax error, near ';'");}  
+            | IF LP Exp error RP Stmt ELSE Stmt         {synerror("syntax error, near 'RP'");}  
             ;
 
 /* Local Definitions */
@@ -98,6 +104,7 @@ DefList     : Def DefList
             | /* empty */
             ;
 Def         : Specifier DecList SEMI
+            | error SEMI                                {synerror("syntax error, near ';'");}  
             ;
 DecList     : Dec 
             | Dec COMMA DecList
@@ -125,13 +132,14 @@ Exp     : Exp ASSIGNOP Exp
         | ID
         | INT
         | FLOAT
-        | error RP
+        | error                         {synerror("syntax error, about Exp");}  
         ;
 Args    : Exp COMMA Args
-        | Exp
+        | Exp   
         ;
 
 %%
-int yyerror(char* msg) {
-    fprintf(stderr, "Error type B at Line %d: %s\n", yylineno,msg);
+
+int yyerror(char* msg){
+     fprintf(stderr, "yyerror Error type B at Line %d: \'%s\'\n",yylineno, msg);   
 }
