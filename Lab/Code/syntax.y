@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "syntax.tab.h"
 #include "lex.yy.c"
-#include "tree.c"
+#include "tree.h"
 extern int yylex (void);
 void synerror(char* msg);
 int yyerror(char* msg);
@@ -13,12 +13,20 @@ int yyerror(char* msg);
 
 /* declared types */
 %union {
-    Node *node;
+    struct Node* node;
 }
 
 /* declared tokens */
 %token <node> INT FLOAT ID SEMI COMMA ASSIGNOP RELOP PLUS MINUS STAR DIV
 %token <node> AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
+
+/* declared non-terminals */
+%type <node> Program ExtDefList ExtDef ExtDecList   
+%type <node> Specifier StructSpecifier OptTag Tag   
+%type <node> VarDec FunDec VarList ParamDec         
+%type <node> CompSt StmtList Stmt                   
+%type <node> DefList Def Dec DecList               
+%type <node> Exp Args                               
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -35,7 +43,7 @@ int yyerror(char* msg);
 /* High-level Definitions */
 Program     : ExtDefList {
     $$ = NewNode(@$.first_line,  "Program", 0, NULL);
-    Add($$, $1);
+    AddChild($$, $1);
     root = $$;
 }
             ;

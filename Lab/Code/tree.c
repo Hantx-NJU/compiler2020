@@ -1,27 +1,11 @@
 #include "syntax.tab.h"
+#include "tree.h"
 # include<stdio.h>
 # include<string.h>
 # include<stdlib.h>
 
-extern enum yytokentype;
-
-typedef struct Node{
-    int lineno;
-    char* name;
-    enum yytokentype type;
-    int num_of_child;
-    struct Node* children[20];
-    union{
-        int _int;
-        float _float;
-        char*_string;
-    }val;
-} Node;
-
-struct Node* root;
-
-Node *NewNode(int lineno, char *name, enum yytokentype type,void * val){
-    Node* p =  malloc(sizeof(Node));
+pNode NewNode(int lineno, char *name, int type,void * val){
+    pNode p =  malloc(sizeof(Node));
     p->lineno = lineno;
     p->name = malloc(strlen(name) + 1);
     strcpy(p->name, name);
@@ -42,11 +26,11 @@ Node *NewNode(int lineno, char *name, enum yytokentype type,void * val){
     }
 }  
 
-void Add(Node* parent, Node* child){
+void AddChild(pNode parent,pNode child){
    parent->children[parent->num_of_child++] = child;
 }
 
-void PreOrder(Node* node){
+void PreOrder(pNode node){
     if(node == NULL) return;
     if(node->type == ID){
         printf("%s: %s\n", node->name, node->val);

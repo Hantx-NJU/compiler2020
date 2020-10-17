@@ -62,16 +62,17 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 2 "syntax.y" /* yacc.c:339  */
+#line 1 "syntax.y" /* yacc.c:339  */
 
 #include <stdio.h>
 #include "syntax.tab.h"
 #include "lex.yy.c"
+#include "tree.h"
 extern int yylex (void);
 void synerror(char* msg);
 int yyerror(char* msg);
 
-#line 75 "syntax.tab.c" /* yacc.c:339  */
+#line 76 "syntax.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -139,7 +140,17 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+
+union YYSTYPE
+{
+#line 15 "syntax.y" /* yacc.c:355  */
+
+    struct Node* node;
+
+#line 151 "syntax.tab.c" /* yacc.c:355  */
+};
+
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
@@ -167,7 +178,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 171 "syntax.tab.c" /* yacc.c:358  */
+#line 182 "syntax.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -469,13 +480,13 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    31,    31,    33,    34,    36,    37,    38,    39,    41,
-      42,    46,    47,    49,    50,    51,    53,    54,    56,    60,
-      61,    62,    64,    65,    66,    68,    69,    70,    72,    76,
-      78,    79,    81,    82,    83,    84,    85,    86,    87,    88,
-      92,    93,    95,    96,    98,    99,   101,   102,   106,   107,
-     108,   109,   110,   111,   112,   113,   114,   115,   116,   117,
-     118,   119,   120,   121,   122,   123,   124,   126,   127
+       0,    44,    44,    50,    53,    55,    56,    57,    58,    60,
+      61,    65,    66,    68,    69,    70,    72,    73,    75,    79,
+      80,    81,    83,    84,    85,    87,    88,    89,    91,    95,
+      97,    98,   100,   101,   102,   103,   104,   105,   106,   107,
+     111,   112,   114,   115,   117,   118,   120,   121,   125,   126,
+     127,   128,   129,   130,   131,   132,   133,   134,   135,   136,
+     137,   138,   139,   140,   141,   142,   143,   145,   146
 };
 #endif
 
@@ -1454,62 +1465,80 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 8:
-#line 39 "syntax.y" /* yacc.c:1646  */
+        case 2:
+#line 44 "syntax.y" /* yacc.c:1646  */
+    {
+    (yyval.node) = NewNode((yyloc).first_line,  "Program", 0, NULL);
+    AddChild((yyval.node), (yyvsp[0].node));
+    root = (yyval.node);
+}
+#line 1476 "syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 3:
+#line 50 "syntax.y" /* yacc.c:1646  */
+    {
+    
+}
+#line 1484 "syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 8:
+#line 58 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, the global variable cannot be initialized in the definition.");}
-#line 1461 "syntax.tab.c" /* yacc.c:1646  */
+#line 1490 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 51 "syntax.y" /* yacc.c:1646  */
+#line 70 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, near 'RC'");}
-#line 1467 "syntax.tab.c" /* yacc.c:1646  */
+#line 1496 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 62 "syntax.y" /* yacc.c:1646  */
+#line 81 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, near 'RB'");}
-#line 1473 "syntax.tab.c" /* yacc.c:1646  */
+#line 1502 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 66 "syntax.y" /* yacc.c:1646  */
+#line 85 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, in function definition");}
-#line 1479 "syntax.tab.c" /* yacc.c:1646  */
+#line 1508 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 70 "syntax.y" /* yacc.c:1646  */
+#line 89 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, near ','");}
-#line 1485 "syntax.tab.c" /* yacc.c:1646  */
+#line 1514 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 87 "syntax.y" /* yacc.c:1646  */
+#line 106 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, near ';'");}
-#line 1491 "syntax.tab.c" /* yacc.c:1646  */
+#line 1520 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 88 "syntax.y" /* yacc.c:1646  */
+#line 107 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, near 'RP'");}
-#line 1497 "syntax.tab.c" /* yacc.c:1646  */
+#line 1526 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 96 "syntax.y" /* yacc.c:1646  */
+#line 115 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, near ';'");}
-#line 1503 "syntax.tab.c" /* yacc.c:1646  */
+#line 1532 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 124 "syntax.y" /* yacc.c:1646  */
+#line 143 "syntax.y" /* yacc.c:1646  */
     {synerror("syntax error, about Exp");}
-#line 1509 "syntax.tab.c" /* yacc.c:1646  */
+#line 1538 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1513 "syntax.tab.c" /* yacc.c:1646  */
+#line 1542 "syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1744,9 +1773,9 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 130 "syntax.y" /* yacc.c:1906  */
+#line 149 "syntax.y" /* yacc.c:1906  */
 
 
 int yyerror(char* msg){
-     //fprintf(stderr, "yyerror Error type B at Line %d: \'%s\'\n",yylineno, msg);   
+     fprintf(stderr, "yyerror Error type B at Line %d: \'%s\'\n",yylineno, msg);   
 }
