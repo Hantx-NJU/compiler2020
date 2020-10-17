@@ -6,6 +6,8 @@ void synerror(char* msg);
 int yyerror(char* msg);
 %}
 
+%locations
+
 /* declared tokens */
 %token INT FLOAT ID SEMI COMMA ASSIGNOP RELOP PLUS MINUS STAR DIV
 %token AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
