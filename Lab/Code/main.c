@@ -2,7 +2,7 @@
 
 extern FILE* yyin;
 extern int yylex (void);
-extern void yyrestart ( FILE *input_file  );
+extern void yyrestart ( FILE *input_file );
 extern int yyparse();
 
 int main(int argc, char** argv) {
@@ -16,4 +16,4 @@ int main(int argc, char** argv) {
     yyrestart(f);
     yyparse();
     return 0;
-}}
+}
