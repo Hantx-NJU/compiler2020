@@ -1,4 +1,7 @@
 %option yylineno
+%{
+    void lexerror(char* msg);
+%}
 
 digit [0-9]
 letter [_a-zA-Z]
@@ -19,44 +22,49 @@ AND "&&"
 OR "||"
 DOT "."
 NOT "!"
-TYPE int|float
+TYPE "int"|"float"
 LP "("
 RP ")"
 LB "["
 RB "]"
 LC "{"
 RC "}"
-STRUCT struct
-RETURN return
-IF if
-ELSE else
-WHILE while
+STRUCT "struct"
+RETURN "return"
+IF "if"
+ELSE "else"
+WHILE "while"
 
 %%
-{SPACE}  {}
-{SEMI}  {return SEMI;}
-{COMMA} {return COMMA;}
+{SPACE}     {}
+{SEMI}      {return SEMI;}
+{COMMA}     {return COMMA;}
 {ASSIGNOP}  {return ASSIGNOP;}
-{RELOP} {return RELOP;}
-{PLUS}  {return PLUS;}
-{MINUS} {return MINUS;}
-{STAR}  {return STAR;}
-{DIV}   {return DIV;}
-{AND}   {return AND;}
-{OR}    {return OR;}
-{DOT}   {return DOT;}
-{NOT}   {return NOT;}
-{TYPE}  {return TYPE;}
-{LP}    {return LP;}
-{RP}    {return RP;}
-{LB}    {return LB;}
-{RB}    {return RB;}
-{LC}    {return LC;}
-{RC}    {return RC;}
+{RELOP}     {return RELOP;}
+{PLUS}      {return PLUS;}
+{MINUS}     {return MINUS;}
+{STAR}      {return STAR;}
+{DIV}       {return DIV;}
+{AND}       {return AND;}
+{OR}        {return OR;}
+{DOT}       {return DOT;}
+{NOT}       {return NOT;}
+{TYPE}      {return TYPE;}
+{LP}        {return LP;}
+{RP}        {return RP;}
+{LB}        {return LB;}
+{RB}        {return RB;}
+{LC}        {return LC;}
+{RC}        {return RC;}
+{STRUCT}    {return STRUCT;}
+{RETURN}    {return RETURN;}
+{IF}        {return IF;}
+{ELSE}      {return ELSE;}
+{WHILE}     {return WHILE;}   
 {INT}   {return INT;}
 {FLOAT}   {return FLOAT;}
 {ID}   {return ID;}
-.   {printf("Error type A at Line %d: Mysterious characters \'%s\'\n",yylineno, yytext);}
+.   {lexerror(yytext);}
 
 
 %%

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "syntax.tab.h"
 extern int yylex (void);
+void synerror(char* msg);
 int yyerror(char* msg);
 %}
 
@@ -35,6 +36,7 @@ ExtDefList  : ExtDef ExtDefList
 ExtDef      : Specifier ExtDecList SEMI
             | Specifier SEMI
             | Specifier FunDec CompSt
+            | Specifier error SEMI                {synerror("syntax error, the global variable cannot be initialized in the definition.");}
             ;
 ExtDecList  : VarDec
             | VarDec COMMA ExtDefList
@@ -46,6 +48,7 @@ Specifier       : TYPE
                 ;
 StructSpecifier : STRUCT OptTag LC DefList RC
                 | STRUCT Tag
+                | STRUCT OptTag LC DefList error RC     {synerror("syntax error, near 'RC'");}
                 ;
 OptTag          : ID
                 | /* empty */
@@ -56,12 +59,15 @@ Tag             : ID
 /* Declarators */
 VarDec      : ID
             | VarDec LB INT RB
+            | VarDec LB INT error RB            {synerror("syntax error, near 'RB'");}
             ;
 FunDec      : ID LP VarList RP
             | ID LP RP
+            | error RP                  {synerror("syntax error, in function definition");}
             ;
 VarList     : ParamDec COMMA VarList
             | ParamDec
+            | ParamDec error COMMA VarList      {synerror("syntax error, near ','");}  
             ;
 ParamDec    : Specifier VarDec
             ;
@@ -78,6 +84,8 @@ Stmt        : Exp SEMI
             | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE
             | IF LP Exp RP Stmt ELSE Stmt
             | WHILE LP Exp RP Stmt
+            | Exp error SEMI                            {synerror("syntax error, near ';'");}  
+            | IF LP Exp error RP Stmt ELSE Stmt         {synerror("syntax error, near 'RP'");}  
             ;
 
 /* Local Definitions */
@@ -85,6 +93,7 @@ DefList     : Def DefList
             | /* empty */
             ;
 Def         : Specifier DecList SEMI
+            | error SEMI                                {synerror("syntax error, near ';'");}  
             ;
 DecList     : Dec 
             | Dec COMMA DecList
@@ -112,13 +121,14 @@ Exp     : Exp ASSIGNOP Exp
         | ID
         | INT
         | FLOAT
+        | error                         {synerror("syntax error, about Exp");}  
         ;
 Args    : Exp COMMA Args
-        | Exp
+        | Exp   
         ;
 
 %%
 #include "lex.yy.c"
-int yyerror(char* msg) {
-    fprintf(stderr, "error: %s\n", msg);
+int yyerror(char* msg){
+     //fprintf(stderr, "yyerror Error type B at Line %d: \'%s\'\n",yylineno, msg);   
 }
