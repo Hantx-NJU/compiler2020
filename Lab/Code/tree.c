@@ -4,8 +4,8 @@
 # include<string.h>
 # include<stdlib.h>
 
-pNode NewNode(int lineno, char *name, int type,void * val){
-    pNode p =  malloc(sizeof(Node));
+Node* NewNode(int lineno, char *name, int type,void * val){
+    Node* p =  malloc(sizeof(Node));
     p->lineno = lineno;
     p->name = malloc(strlen(name) + 1);
     strcpy(p->name, name);
@@ -26,20 +26,20 @@ pNode NewNode(int lineno, char *name, int type,void * val){
     }
 }  
 
-void AddChild(pNode parent,pNode child){
+void AddChild(Node* parent,Node* child){
    parent->children[parent->num_of_child++] = child;
 }
 
-void PreOrder(pNode node){
+void PreOrder(Node* node){
     if(node == NULL) return;
     if(node->type == ID){
-        printf("%s: %s\n", node->name, node->val);
+        printf("%s: %s\n", node->name, node->val._string);
     }
     else if(node->type == INT){
-        printf("%s: %d\n", node->name, node->val);
+        printf("%s: %d\n", node->name, node->val._int);
     }
     else if(node->type == FLOAT){
-        printf("%s: %f\n", node->name, node->val);
+        printf("%s: %f\n", node->name, node->val._float);
     }
     else{
         printf("%s (%d)\n", node->name, node->lineno);

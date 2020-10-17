@@ -13,12 +13,11 @@ typedef struct node{
     }val;
 } Node;
 
-typedef struct Node* pNode;
 
-pNode root;
+Node* root;
 
-pNode NewNode(int lineno, char *name, int type,void * val);
-void AddChild(pNode parent, pNode child);
-void PreOrder(pNode node);
+extern Node* NewNode(int lineno, char *name, int type,void * val);
+extern void AddChild(Node* parent, Node* child);
+extern void PreOrder(Node* node);
 
 #endif
