@@ -1,23 +1,25 @@
 #ifndef __TREE_H__
 #define __TREE_H__
-typedef struct node{
+#include "syntax.tab.h"
+# include<stdio.h>
+# include<string.h>
+# include<stdlib.h>
+
+#define MAX_LENGTH 33
+#define MAX_CHILD 10
+typedef struct Node{
+    char name[MAX_LENGTH];
+    char text[MAX_LENGTH];
     int lineno;
-    char* name;
-    int type;
-    int num_of_child;
-    struct node* children[20];
-    union{
-        int _int;
-        float _float;
-        char*_string;
-    }val;
+    int childSum;
+    struct Node* children[MAX_CHILD];
 } Node;
 
 
 Node* root;
 
-extern Node* NewNode(int lineno, char *name, int type,void * val);
-extern void AddChild(Node* parent, Node* child);
-extern void PreOrder(Node* node, int num_of_space);
+Node* NewNode(char* name, char* text);
+void AddChild(Node* parent, Node* child);
+void PreOrder(Node* node, int num);
 
 #endif
