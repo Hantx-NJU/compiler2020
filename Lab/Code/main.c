@@ -35,6 +35,6 @@ int main(int argc, char** argv) {
     }
     yyrestart(f);
     yyparse();
-    PreOrder(root);
+    PreOrder(root, 0);
     return 0;
 }

@@ -18,6 +18,6 @@ Node* root;
 
 extern Node* NewNode(int lineno, char *name, int type,void * val);
 extern void AddChild(Node* parent, Node* child);
-extern void PreOrder(Node* node);
+extern void PreOrder(Node* node, int num_of_space);
 
 #endif

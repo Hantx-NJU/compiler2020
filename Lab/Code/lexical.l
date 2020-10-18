@@ -27,7 +27,7 @@ space   " "|\t
 "||"   {yylval.node = NewNode(yylineno, "OR", OR, NULL);return OR;}
 "." {yylval.node = NewNode(yylineno, "DOT", DOT, NULL);return DOT;}
 "!" {yylval.node = NewNode(yylineno, "NOT", NOT, NULL);return NOT;}
-"int"|"float"   {yylval.node = NewNode(yylineno, "TYPE", TYPE, NULL);return TYPE;}
+"int"|"float"   {yylval.node = NewNode(yylineno, "TYPE", TYPE, yytext); return TYPE;}
 "(" {yylval.node = NewNode(yylineno, "LP", LP, NULL);return LP;}
 ")" {yylval.node = NewNode(yylineno, "RP", RP, NULL);return RP;}
 "[" {yylval.node = NewNode(yylineno, "LB", LB, NULL);return LB;}
@@ -39,7 +39,7 @@ space   " "|\t
 "if"    {yylval.node = NewNode(yylineno, "IF", IF, NULL);return IF;}
 "else"  {yylval.node = NewNode(yylineno, "ELSE", ELSE, NULL);return ELSE;}
 "while" {yylval.node = NewNode(yylineno, "WHILE", WHILE, NULL);return WHILE;}
-[_a-zA-Z][_a-zA-Z0-9]* {char* res = malloc(strlen(yytext)+1);strcpy(res, yytext) ; yylval.node = NewNode(yylineno, "ID", ID, (void*)res);return ID;}
+[_a-zA-Z][_a-zA-Z0-9]* { yylval.node = NewNode(yylineno, "ID", ID, yytext);return ID;}
 {space} {}
 \n|\r {yycolumn = 1;}
 .   {printf("Error type A at Line %d : Mysterious characters  \'%s\'\n", yylineno, yytext);}
