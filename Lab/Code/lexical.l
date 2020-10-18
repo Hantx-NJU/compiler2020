@@ -16,7 +16,7 @@ letter [_a-zA-Z]
 INT ([1-9][0-9]*)|0 
 FLOAT ({digits}\.{digits})|(({digit}*\.?{digits})|{digits}\.)[Ee][+-]?{digits}
 ID [_a-zA-Z][_a-zA-Z0-9]*
-SPACE " "|\n|\t|\r
+SPACE " "|\t
 SEMI ";"
 COMMA ","
 ASSIGNOP "="
@@ -43,7 +43,7 @@ ELSE "else"
 WHILE "while"
 
 %%
-\n          {yycolumn = 1;}
+\n|\r          {yycolumn = 1;}
 {SPACE}     {}
 {SEMI}      {yylval.node = NewNode("SEMI",yytext);return SEMI;}
 {COMMA}     {yylval.node = NewNode("COMMA",yytext);return COMMA;}
