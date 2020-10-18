@@ -32,31 +32,7 @@ syntax-c: $(YFILE)
 -include $(patsubst %.o, %.d, $(OBJS))
 
 # 定义的一些伪目标
-.PHONY: clean test
-test:
-	./parser ../Test/test1.cmm
-	./parser ../Test/A_1.cmm
-	./parser ../Test/A_2.cmm
-	./parser ../Test/A_3.cmm
-	./parser ../Test/A_4.cmm
-	./parser ../Test/A_5.cmm
-	./parser ../Test/A_6.cmm
-	./parser ../Test/A_7.cmm
-	./parser ../Test/A_8.cmm
-	./parser ../Test/A_9.cmm
-	./parser ../Test/B_1.cmm
-	./parser ../Test/B_2.cmm
-	./parser ../Test/C_1.cmm
-	./parser ../Test/C_2.cmm
-	./parser ../Test/D_1.cmm
-	./parser ../Test/D_2.cmm
-	./parser ../Test/D_3.cmm
-	./parser ../Test/E1_1.cmm
-	./parser ../Test/E1_2.cmm
-	./parser ../Test/E2_1.cmm
-	./parser ../Test/E2_2.cmm
-	./parser ../Test/E3_1.cmm
-	./parser ../Test/E3_2.cmm
+.PHONY: clean 
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
