@@ -143,5 +143,5 @@ Args    : Exp COMMA Args    {$$ = NewNode(@$.first_line,  "Args", 0, NULL); AddC
 %%
 
 int yyerror(char* msg){
-     fprintf(stderr, "yyerror Error type B at Line %d: \'%s\'\n",yylineno, msg);   
+    
 }

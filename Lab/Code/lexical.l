@@ -2,6 +2,8 @@
 %{
 #include "syntax.tab.h"
 #include "tree.h"
+void synerror(char* msg);
+int yyerror(char* msg);
 int yycolumn = 1;
 #define YY_USER_ACTION  yylloc.first_line = yylloc.last_line = yylineno; \
     yylloc.first_column = yycolumn; \
@@ -42,5 +44,5 @@ space   " "|\t
 [_a-zA-Z][_a-zA-Z0-9]* { yylval.node = NewNode(yylineno, "ID", ID, yytext);return ID;}
 {space} {}
 \n|\r {yycolumn = 1;}
-.   {printf("Error type A at Line %d : Mysterious characters  \'%s\'\n", yylineno, yytext);}
+.   {lexerror(yytext);}
 %%

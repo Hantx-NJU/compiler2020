@@ -9,18 +9,21 @@ extern int yyparse();
 
 int LexCurrentLineno = 0;
 int SynCurrentLineno = 0;
+int have_error = 0;
 void lexerror(char* msg)
 {
     if(yylineno != LexCurrentLineno)
     {
-        printf("Error type A at Line %d: Mysterious characters \'%s\'\n",yylineno, msg);
+        have_error = 1;
+        printf("Error type A at Line %d: Mysterious characters \"%s\"\n",yylineno, msg);
         LexCurrentLineno = yylineno;
     }
 }
 void synerror(char* msg) {
     if(yylineno != SynCurrentLineno)
     {
-        printf("Error type B at Line %d: \'%s\'\n",yylineno, msg);
+        have_error = 1;
+        printf("Error type B at Line %d: %s\n",yylineno, msg);
         SynCurrentLineno = yylineno;
     }
 }
@@ -35,6 +38,6 @@ int main(int argc, char** argv) {
     }
     yyrestart(f);
     yyparse();
-    PreOrder(root, 0);
+    if(!have_error) PreOrder(root, 0);
     return 0;
 }

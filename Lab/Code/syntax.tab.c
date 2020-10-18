@@ -2107,5 +2107,5 @@ yyreturn:
 
 
 int yyerror(char* msg){
-     fprintf(stderr, "yyerror Error type B at Line %d: \'%s\'\n",yylineno, msg);   
+    
 }
