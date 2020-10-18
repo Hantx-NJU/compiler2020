@@ -50,13 +50,13 @@ test:
 	./parser ../Test/C_2.cmm
 	./parser ../Test/D_1.cmm
 	./parser ../Test/D_2.cmm
-	# ./parser ../Test/D_3.cmm
-	# ./parser ../Test/E1_1.cmm
-	# ./parser ../Test/E1_2.cmm
+	./parser ../Test/D_3.cmm
+	./parser ../Test/E1_1.cmm
+	./parser ../Test/E1_2.cmm
 	./parser ../Test/E2_1.cmm
 	./parser ../Test/E2_2.cmm
-	# ./parser ../Test/E3_1.cmm
-	# ./parser ../Test/E3_2.cmm
+	./parser ../Test/E3_1.cmm
+	./parser ../Test/E3_2.cmm
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)

@@ -7,7 +7,6 @@ extern Node* root;
 extern int yylex (void);
 extern void yyrestart ( FILE *input_file  );
 extern int yyparse();
-
 int ErrorNum = 0;
 int LexCurrentLineno = 0;
 int SynCurrentLineno = 0;
@@ -30,6 +29,7 @@ void synerror(char* msg) {
 }
 
 int main(int argc, char** argv) {
+    root = NULL;
     if(argc <= 1)   return 1;
     FILE* f =fopen(argv[1], "r");
     if(!f)
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     }
     yyrestart(f);
     yyparse();
-    if(!ErrorNum)
+    if(!ErrorNum && root)
         PreOrder(root, 0);
     return 0;
 }
