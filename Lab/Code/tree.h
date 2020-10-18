@@ -1,23 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef __TREE_H__
+#define __TREE_H__
+#include "syntax.tab.h"
+# include<stdio.h>
+# include<string.h>
+# include<stdlib.h>
 
-#define MAX_NUM 33
+#define MAX_LENGTH 33
 #define MAX_CHILD 10
-
-extern int yylineno;
-
-typedef struct TreeNode
-{
-    char name[MAX_NUM];
-    char text[MAX_NUM];
+typedef struct Node{
+    char name[MAX_LENGTH];
+    char text[MAX_LENGTH];
     int lineno;
-    struct TreeNode* child[MAX_CHILD];
-    int childNum;
-}TreeNode;
+    int childSum;
+    struct Node* children[MAX_CHILD];
+} Node;
 
-TreeNode* CreateNode(char *name, char* text);
 
-void AddChild(TreeNode* child, int no);
+Node* root;
 
-void PrintTree(TreeNode* root);
+Node* NewNode(char* name, char* text);
+void AddChild(Node* parent, Node* child);
+void PreOrder(Node* node, int num);
+
+#endif

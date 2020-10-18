@@ -1,5 +1,6 @@
 %option yylineno
 %{
+    #include "tree.h"
     void lexerror(char* msg);
     int yycolumn = 1;
     #define YY_USER_ACTION  yylloc.first_line = yylloc.last_line = yylineno; \
@@ -44,33 +45,33 @@ WHILE "while"
 %%
 \n          {yycolumn = 1;}
 {SPACE}     {}
-{SEMI}      {return SEMI;}
-{COMMA}     {return COMMA;}
-{ASSIGNOP}  {return ASSIGNOP;}
-{RELOP}     {return RELOP;}
-{PLUS}      {return PLUS;}
-{MINUS}     {return MINUS;}
-{STAR}      {return STAR;}
-{DIV}       {return DIV;}
-{AND}       {return AND;}
-{OR}        {return OR;}
-{DOT}       {return DOT;}
-{NOT}       {return NOT;}
-{TYPE}      {return TYPE;}
-{LP}        {return LP;}
-{RP}        {return RP;}
-{LB}        {return LB;}
-{RB}        {return RB;}
-{LC}        {return LC;}
-{RC}        {return RC;}
-{STRUCT}    {return STRUCT;}
-{RETURN}    {return RETURN;}
-{IF}        {return IF;}
-{ELSE}      {return ELSE;}
-{WHILE}     {return WHILE;}   
-{INT}   {return INT;}
-{FLOAT}   {return FLOAT;}
-{ID}   {return ID;}
+{SEMI}      {yylval.node = NewNode("SEMI",yytext);return SEMI;}
+{COMMA}     {yylval.node = NewNode("COMMA",yytext);return COMMA;}
+{ASSIGNOP}  {yylval.node = NewNode("ASSIGNOP",yytext);return ASSIGNOP;}
+{RELOP}     {yylval.node = NewNode("RELOP",yytext);return RELOP;}
+{PLUS}      {yylval.node = NewNode("PLUS",yytext);return PLUS;}
+{MINUS}     {yylval.node = NewNode("MINUS",yytext);return MINUS;}
+{STAR}      {yylval.node = NewNode("STAR",yytext);return STAR;}
+{DIV}       {yylval.node = NewNode("DIV",yytext);return DIV;}
+{AND}       {yylval.node = NewNode("AND",yytext);return AND;}
+{OR}        {yylval.node = NewNode("OR",yytext);return OR;}
+{DOT}       {yylval.node = NewNode("DOT",yytext);return DOT;}
+{NOT}       {yylval.node = NewNode("NOT",yytext);return NOT;}
+{TYPE}      {yylval.node = NewNode("TYPE",yytext);return TYPE;}
+{LP}        {yylval.node = NewNode("LP",yytext);return LP;}
+{RP}        {yylval.node = NewNode("RP",yytext);return RP;}
+{LB}        {yylval.node = NewNode("LB",yytext);return LB;}
+{RB}        {yylval.node = NewNode("RB",yytext);return RB;}
+{LC}        {yylval.node = NewNode("LC",yytext);return LC;}
+{RC}        {yylval.node = NewNode("RC",yytext);return RC;}
+{STRUCT}    {yylval.node = NewNode("STRUCT",yytext);return STRUCT;}
+{RETURN}    {yylval.node = NewNode("RETURN",yytext);return RETURN;}
+{IF}        {yylval.node = NewNode("IF",yytext);return IF;}
+{ELSE}      {yylval.node = NewNode("ELSE",yytext);return ELSE;}
+{WHILE}     {yylval.node = NewNode("WHILE",yytext);return WHILE;}   
+{INT}   {yylval.node = NewNode("INT",yytext);return INT;}
+{FLOAT}   {yylval.node = NewNode("FLOAT",yytext);return FLOAT;}
+{ID}   {yylval.node = NewNode("ID",yytext);return ID;}
 .   {lexerror(yytext);}
 
 
