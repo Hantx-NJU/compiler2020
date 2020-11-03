@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "tree.h"
+#include "semantic.h"
 
 extern FILE* yyin;
 extern int yylineno;
@@ -40,6 +41,9 @@ int main(int argc, char** argv) {
     yyrestart(f);
     yyparse();
     if(!ErrorNum && root)
-        PreOrder(root, 0);
+    {  
+        initHashtable();
+        traverseTree(root);
+    }
     return 0;
 }
