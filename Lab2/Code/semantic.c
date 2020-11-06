@@ -18,7 +18,7 @@ unsigned int hash(char* name) {
 
 void initHashtable() {
     for(int i = 0; i < HASHTABLE_SIZE; ++i) {
-        hashtable[i] = NULL；
+        hashtable[i] = NULL;
     }
 }
 
@@ -94,7 +94,8 @@ pType Specifier(Node* node) {
     if(strcmp(node->children[0]->name, "TYPE") == 0) { // Specifier -> TYPE
         pt->kind = BASIC;
         if(strcmp(node->children[0]->text, "int") == 0) pt->u.basic = BASIC_INT;
-        else if(strcmp(node->children[0]->text, "float") == 0) pt->u.basic == BASIC_FLOAT;
+        else if(strcmp(node->children[0]->text, "float") == 0) pt->u.basic = BASIC_FLOAT;
+        return pt;
     }
     else if(strcmp(node->children[0]->name, "StructSpecifier") == 0) { // Specifier -> StructSpecifier
         return StructSpecifier(node->children[0]);
@@ -109,8 +110,9 @@ pType StructSpecifier(Node* node) {
         if(opttag != NULL) {
             int index = lookup(opttag);
             if(index != -1) { // OptTag 已被定义
-                printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", node->children[1]->lineno, node->children[1]->text);
-            } 
+                printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", node->children[1]->lineno, opttag);
+                return NULL; 
+            }
         }
         pType pt = (pType)calloc(1, sizeof(Type_));
         pType npt = (pType)calloc(1, sizeof(Type_));
@@ -128,7 +130,7 @@ pType StructSpecifier(Node* node) {
         char* tag = Tag(node->children[1]);
         int index = lookup(tag);
         if(index == -1) { // 没有定义 tag
-            printf("Error type 17 at Line %d: Undefined structure \"%s\".\n", node->children[1]->lineno, node->children[1]->text);
+            printf("Error type 17 at Line %d: Undefined structure \"%s\".\n", node->children[1]->lineno, tag);
             return NULL;
         }
         pType pt = (pType)calloc(1, sizeof(Type_));
@@ -154,22 +156,28 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
     if(node == NULL) return;
     assert(node->childSum == 1 || node->childSum == 4);
     if(node->childSum == 1) {   // VarDec -> ID
+        printf("flag1\n");
         if(lookup(node->children[0]->text) != -1) { // ID已经在hash中
-            printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+            if(pf != NULL){
+                if(pf->type->kind == STRUCT_TAG)
+                    printf("Error type 15 at Line %d: Redefined field \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+            }
+            else printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+            return;
         }
         pFieldList npf = (pFieldList)calloc(1, sizeof(FieldList_));
         npf->name = node->children[0]->text;
         npf->type = pt;
         insert(npf);
-        if(pf != null) { // 这个 Var 是 pf 的形参或者成员
+        if(pf != NULL) { // 这个 Var 是 pf 的形参或者成员
             assert(pf->type->kind == FUNCTION || pf->type->kind == STRUCT_TAG);
             if(pf->type->kind == FUNCTION) {
                 if(pf->type->u.function.argc == 0) { // 插入第一个形参
                     pf->type->u.function.argv= npf;
                 }
                 else {
-                    pFieldList tmp = pf->type->u.function.argv->tail;
-                    while(tmp != NULL) tmp = tmp->tail;
+                    pFieldList tmp = pf->type->u.function.argv;
+                    while(tmp->tail != NULL) tmp = tmp->tail;
                     tmp->tail = npf;
                 }
                 pf->type->u.function.argc++;
@@ -179,8 +187,8 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
                     pf->type->u.member = npf;
                 }
                 else {
-                    pFieldList tmp = pf->type->u.member->tail;
-                    while(tmp != NULL) tmp = tmp->tail;
+                    pFieldList tmp = pf->type->u.member;
+                    while(tmp->tail != NULL) tmp = tmp->tail;
                     tmp->tail = npf;
                 }
             }
@@ -201,6 +209,7 @@ void FunDec(Node* node, pType pt) {
     // for both production
     if(lookup(node->children[0]->text) != -1) { // ID 已经在hash中
         printf("Error type 4 at Line %d: Redefined function \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+        return;
     }
     pFieldList pf = (pFieldList)calloc(1, sizeof(FieldList_));
     pType npt = (pType)calloc(1, sizeof(Type_));
@@ -231,7 +240,7 @@ void VarList(Node* node, pFieldList pf) {
 void ParamDec(Node* node, pFieldList pf) {
     if(node == NULL) return;
     assert(node->childSum == 2);
-    pType pt = Specifier(node->children[0]);
+    pType pt = Specifier(node->children[0]); // ParamDec -> Specifier VarDec
     if(pt == NULL) return; 
     VarDec(node->children[1], pt, pf);
 }
@@ -244,7 +253,7 @@ void CompSt(Node* node, pType pt) {
 }
 
 void StmtList(Node* node, pType pt) { // pt 为返回值类型, 用于检查错误类型 8
-    if(StmtList == NULL) return;
+    if(node == NULL) return;
     assert(node->childSum == 2);
     Stmt(node->children[0], pt);    // StmtList -> Stmt StmtList
     StmtList(node->children[1], pt);
@@ -288,19 +297,24 @@ void Dec(Node* node, pType pt, pFieldList pf) {
         VarDec(node->children[0], pt, pf);
     }
     else if(node->childSum == 3) { // Dec -> VarDec ASSIGNOP Exp
+        if(pf->type->kind == STRUCT_TAG) {
+            printf("Error type 15 at Line %d: Initialized field while defining.\n", node->children[0]->lineno);
+            return;
+        }
         VarDec(node->children[0], pt, pf);
         // TODO
     }
 }
 
 pType Exp(Node* node) {
-    
+
 }
 
 void show() {
+    printf("\nSHOW BEGIN\n");
     for(int i = 0; i < HASHTABLE_SIZE; ++i) {
         if(hashtable[i] != NULL) {
-            printf("index: %d name: %s ", i, hashtable[i]->name);
+            printf("index: %d\t\tname: %10s\ttype: ", i, hashtable[i]->name);
             showtype(hashtable[i]->type);
             printf("\n");
         }
@@ -309,11 +323,11 @@ void show() {
 
 void showtype(pType pt) {
     if(pt->kind == BASIC) { // BASIC
-        if(pt->u.basic == BASIC_INT) printf("type: int");
-        else if(pt->u.basic == BASIC_FLOAT) printf("type :float");
+        if(pt->u.basic == BASIC_INT) printf("int ");
+        else if(pt->u.basic == BASIC_FLOAT) printf("float ");
     }
     else if(pt->kind == ARRAY) { // ARRAY
-        printf("type: [%d] ", pt->u.array.size);
+        printf("[%d] ", pt->u.array.size);
         pType tmp = pt->u.array.elem;
         while(tmp->kind != BASIC) {
             printf("[%d] ", tmp->u.array.size);
@@ -323,11 +337,18 @@ void showtype(pType pt) {
         else if(tmp->u.basic == BASIC_FLOAT) printf("float");
     }
     else if(pt->kind == STRUCTURE) { // STRUCTURE
-        printf("type: structure ");
-        printf("tag: %s(%d)\n", pt->u.structure->name, lookup(pt->u.structure->name));
+        printf("structure\t\t");
+        if(pt->u.structure->name != NULL) printf("tag: %s(%d)\t\t", pt->u.structure->name, lookup(pt->u.structure->name));
+        else printf("tag: None\t\t");
+        printf("member: ");
+        pFieldList tmp = pt->u.structure->type->u.member;
+        while(tmp != NULL){
+            printf("%s(%d) ", tmp->name, lookup(tmp->name));
+            tmp = tmp->tail;
+        }
     }
     else if(pt->kind == STRUCT_TAG) { // STRUCT_TAG
-        printf("type: struct_tag member: ");
+        printf("struct_tag\tmember: ");
         pFieldList tmp = pt->u.member;
         while(tmp != NULL) {
             printf("%s(%d) ", tmp->name, lookup(tmp->name));
@@ -335,8 +356,9 @@ void showtype(pType pt) {
         }
     }
     else if(pt->kind == FUNCTION) { // FUNCTION
-        printf("argc: %d ret: ", pt->u.function.argc);
+        printf("ret: ");
         showtype(pt->u.function.ret);
+        printf("\t\targc: %d\t\t\t", pt->u.function.argc);
         printf("argv: ");
         pFieldList tmp = pt->u.function.argv;
         while(tmp != NULL) {

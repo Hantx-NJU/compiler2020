@@ -15,7 +15,7 @@ typedef struct Type_* pType;
 typedef struct FieldList_* pFieldList;
 
 enum Kind_ {BASIC, ARRAY, STRUCTURE, STRUCT_TAG, FUNCTION};
-struct Type_{
+typedef struct Type_{
     enum Kind_ kind;
     union{
         // BASIC 
@@ -33,13 +33,13 @@ struct Type_{
             pType ret;      // return value
         }function;
     }   u;
-};
+}Type_;
 
-struct FieldList_   {
+typedef struct FieldList_   {
     char* name;
     pType type;
     pFieldList tail;    
-};
+}FieldList_;
 
 // Hash Table 存储所有定义内容：结构体定义 和 变量定义
 pFieldList hashtable[HASHTABLE_SIZE];

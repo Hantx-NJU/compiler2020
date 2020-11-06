@@ -41,7 +41,9 @@ int main(int argc, char** argv) {
     yyrestart(f);
     yyparse();
     if(!ErrorNum && root)
-    {  
+    {
+        PreOrder(root, 0);
+        printf("\n");
         initHashtable();
         traverseTree(root);
     }

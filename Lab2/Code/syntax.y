@@ -51,7 +51,7 @@ ExtDef      : Specifier ExtDecList SEMI         {$$ = NewNode("ExtDef", ""); Add
             |error                              {synerror("syntax error, AAA.");}
             ;
 ExtDecList  : VarDec                            {$$ = NewNode("ExtDecList", ""); AddChild($$, $1);}
-            | VarDec COMMA ExtDefList           {$$ = NewNode("ExtDecList", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
+            | VarDec COMMA ExtDecList           {$$ = NewNode("ExtDecList", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
             ;
 
 /* Specifiers */
