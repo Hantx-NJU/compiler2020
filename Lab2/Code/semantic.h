@@ -62,16 +62,17 @@ pType Specifier(Node* node);
 pType StructSpecifier(Node* node);
 char* OptTag(Node* node);
 char* Tag(Node* node);
-pFieldList VarDec(Node* node,  pType pt);
-pFieldList FunDec(Node* node, pType pt);
-pFieldList VarList(Node* node, pType pt);
+void VarDec(Node* node, pType pt, pFieldList pf); // pf 如果不为空表示这个 Var 是 pf 指向函数的形参或结构体类型的成员
+void FunDec(Node* node, pType pt);
+void VarList(Node* node, pFieldList pf); // 传 pf 是为了在 VarList 中改 pf 对应的 argc, argv
+void ParamDec(Node* node, pFieldList pf);
 void CompSt(Node* node, pType pt);  // pt 为返回类型， 下同
 void StmtList(Node* node, pType pt);
 void Stmt(Node* node, pType pt);
-void DefList(Node* node);
-void Def(Node* node);
-void DecList(Node* node, pType pt);
-void Dec(Node* node, pType pt);
+void DefList(Node* node, pFieldList pf); // pf 如果不为空表示这个 Def 是 pf 指向结构体类型的成员
+void Def(Node* node, pFieldList pf);
+void DecList(Node* node, pType pt, pFieldList pf);
+void Dec(Node* node, pType pt, pFieldList pf);
 pType Exp(Node* node);
 // Args建议附加到Exp中处理, 或 pFieldList Args(Node* node); 返回实参表
 
