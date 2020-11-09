@@ -42,8 +42,8 @@ int main(int argc, char** argv) {
     yyparse();
     if(!ErrorNum && root)
     {
-        PreOrder(root, 0);
-        printf("\n");
+        //PreOrder(root, 0);    //We don't need to print parser tree in lab2
+        //printf("\n");
         initHashtable();
         traverseTree(root);
     }

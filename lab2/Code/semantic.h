@@ -74,6 +74,7 @@ void Def(Node* node, pFieldList pf);
 void DecList(Node* node, pType pt, pFieldList pf);
 void Dec(Node* node, pType pt, pFieldList pf);
 pType Exp(Node* node);
+pFieldList Args(Node* node);
 // Args建议附加到Exp中处理, 或 pFieldList Args(Node* node); 返回实参表
 
 // 其他辅助函数

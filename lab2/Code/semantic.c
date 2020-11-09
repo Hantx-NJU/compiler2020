@@ -2,7 +2,7 @@
 
 void traverseTree(Node* root) {
     if(root != NULL) Program(root);
-    show(); // for debug only
+    //show(); // for debug only
 }
 
 unsigned int hash(char* name) {
@@ -26,7 +26,7 @@ void initHashtable() {
 void insert(pFieldList pf) { 
     if(pf == NULL) return;
     int index = hash(pf->name);
-    for(int i = index; i != (index - 1) % HASHTABLE_SIZE; i = (i + 1) % HASHTABLE_SIZE) {   
+    for(int i = index; i != (index - 1) % HASHTABLE_SIZE; i = (i + 1) % HASHTABLE_SIZE) {   //warning: if index = 0, what about (index - 1) % HASHTABLE_SIZE
         if(hashtable[i] == NULL){
             hashtable[i] = pf;
             return;
@@ -43,6 +43,44 @@ int lookup(char* name) { // 返回下标， 不在表中返回 -1
         }
     }
     return -1;
+}
+
+int isEqual(pType a, pType b){
+    // equal is 0, otherwise is 1
+    if(a->kind != b->kind)
+        return 1;
+    pFieldList apf, bpf;
+    switch(a.kind){
+        case BASIC: 
+            if(a->u.basic != b->u.basic)    return 1;
+            break;
+        case ARRAY: 
+            while(1){
+                if(a->kind != b->kind)  return 1;
+                if(a->kind != ARRAY)    return isEqual(a, b);
+                a = a->u.array.elem;
+                b = b->u.array.elem;
+            }
+            break;
+        case STRUCTURE:
+            return isEqual(a->u.structure->type, b->structure->type);            
+            break;
+        case STRUCT_TAG:    
+            apf = a->u.member;
+            bpf = b->u.member;
+            while(apf){
+                if(bpf == NULL) return 1;
+                if(isEqual(apf->type, bpf->type) == 1)  return 1;
+                apf = apf->tail;
+                bpf = bpf->tail;
+            }
+            if(bpf != NULL) return 1;
+            break;
+        case FUNCTION:
+            //no compairison between two functions 
+            break;
+    }
+    return 0;
 }
 
 void Program(Node* node) {
@@ -156,7 +194,7 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
     if(node == NULL) return;
     assert(node->childSum == 1 || node->childSum == 4);
     if(node->childSum == 1) {   // VarDec -> ID
-        printf("flag1\n");
+        //printf("flag1\n");
         if(lookup(node->children[0]->text) != -1) { // ID已经在hash中
             if(pf != NULL){
                 if(pf->type->kind == STRUCT_TAG)
@@ -261,6 +299,27 @@ void StmtList(Node* node, pType pt) { // pt 为返回值类型, 用于检查错�
 
 void Stmt(Node* node, pType pt) {
     // TODO
+    if(node == NULL) return;
+    assert(node->childSum == 1 || node->childSum == 2 || node->childSum == 3 
+            || node->childSum == 5 || node->childSum == 7);
+    if(node->childSum == 1){    //Stmt -> CompSt
+        CompSt(node->children[0], pt);
+    }
+    else if(node->childSum == 2){   //Stmt ->Exp SEMI
+        Exp(node->children[0]);
+    }
+    else if(node->childSum == 3){   //Stmt -> RETURN Exp SEMI
+        Exp(node->children[1]);
+    }
+    else if(node->childSum == 5){   //Stmt -> IF LP Exp RP Stmt | WHILE LP Exp RP Stmt
+        Exp(node->children[2]);
+        Stmt(node->children[4], pt);
+    }
+    else if(node->childSum == 7){   //Stmt -> IF LP Exp RP Stmt ELSE Stmt
+        Exp(node->children[2]);
+        Stmt(node->children[4], pt);
+        Stmt(node->children[6], pt);
+    }
 }
 
 void DefList(Node* node, pFieldList pf) {
@@ -303,11 +362,106 @@ void Dec(Node* node, pType pt, pFieldList pf) {
         }
         VarDec(node->children[0], pt, pf);
         // TODO
+        Exp(node->children[2]);
     }
 }
 
 pType Exp(Node* node) {
+    if(node == NULL) return NULL;
+    assert(node->childSum == 1 || node->childSum == 2 || node->childSum == 3 || node->childSum == 4);
+    //printf("%s\n", node->children[1]->name);
+    pType pt = NULL;
+    if(node->childSum == 1){
+        if(strcmp(node->children[0]->name, "ID") == 0)
+        {
+            if(lookup(node->children[0]->text) == -1)
+                printf("Error type 1 at Line %d: Undefined variable \"%s \"\n", node->children[0]->lineno, node->children[0]->text);
+            else{
+                int i = lookup(node->children[0]->text);
+                pt = hashtable[i]->type;
+            }
+        }
+        // no error when INT or FLOAT
+    }
+    else if(node->childSum == 2){   //Exp -> MINUS Exp | NOT Exp
+        Exp(node->children[1]);
+    }
+    else if(node->childSum == 3)
+    {
+        if(strcmp(node->children[0]->name, "LP") == 0){ //Exp -> LP Exp RP
+            Exp(node->children[1]);
+        }
+        else if(strcmp(node->children[0]->name, "ID") == 0){    //Exp -> ID LP RP
+            if(lookup(node->children[0]->text) == -1)
+                printf("Error type 2 at Line %d: Undefined function \"%s \"\n", node->children[0]->lineno, node->children[0]->text);
+            else{
+                int i = lookup(node->children[0]->text);
+                if(hashtable[i]->type->kind != FUNCTION)
+                    printf("Error type 11 at Line %d: \"%s\" is not a function\n", node->children[0]->lineno, node->children[0]->text);
+            }
+        }
+        else if(strcmp(node->children[2]->name, "ID") == 0){    //Exp -> Exp DOT ID
+            pt = Exp(node->children[0]);
+            if(pt->kind != STRUCTURE)
+                printf("Error type 13 at Line %d: Illegal use of \".\"\n", node->children[0]->lineno);
+            else{
+                int isMember = -1;
+                pFieldList f = pt->u.structure->type->u.member;
+                while(f){
+                    if(strcmp(node->children[2]->text, f->name) == 0){
+                        isMember = 1;
+                        break;
+                    }
+                    f = f->tail;
+                }
+                if(isMember == -1)
+                    printf("Error type 14 at Line %d: Non-existent field \"%s\"\n", node->children[0]->lineno, node->children[2]->text);
+            }
+        }
+        else{   //Exp -> Exp (ASSIGNOP | AND | OR | RELOP | PLUS | MINUS | STAR | DIV) Exp
+            Exp(node->children[0]);
+            Exp(node->children[2]);
+        }
+    }
+    else{
+        if(strcmp(node->children[0]->name, "ID") == 0){ //Exp -> ID LP Args RP
+            if(lookup(node->children[0]->text) == -1)
+                printf("Error type 2 at Line %d: Undefined function \"%s \"\n", node->children[0]->lineno, node->children[0]->text);
+            else{
+                int i = lookup(node->children[0]->text);
+                if(hashtable[i]->type->kind != FUNCTION)
+                    printf("Error type 11 at Line %d: \"%s\" is not a function\n", node->children[0]->lineno, node->children[0]->text);
+                else{
+                    pFieldList pf = Args(node->children[2]);
+                    pFieldList p = hashtable[i]->type->u.function.argv;
+                    //int argc = hashtable[i]->type->u.function.argc;
+                    //int count = 0;
+                    while(p || pf){
+                        if(p == NULL || pf == NULL){
+                            printf("Error type 9 at Line %d: Function \"%s\" is not applicable for arguments\n", node->children[0]->lineno, node->children[0]->text);
+                            break;
+                        }
 
+                    }
+                }
+            }
+        }
+    }
+    return pt;
+}
+
+pFieldList Args(Node* node){
+    if(node == NULL) return NULL;
+    assert(node->childSum == 1 || node->childSum == 3);
+    //pType pt = (pType)calloc(1, sizeof(Type_));
+    pFieldList pf = (pFieldList)calloc(1, sizeof(FieldList_));
+    pType pt = Exp(node->children[0]);
+    pf->type = pt;
+    pf->tail = NULL;    //Args -> Exp
+    if(node->childSum == 3){    //Args -> Exp COMMA Args
+        pf->tail = Args(node->children[2]);
+    }
+    return pf;
 }
 
 void show() {
