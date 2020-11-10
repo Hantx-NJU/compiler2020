@@ -50,7 +50,7 @@ int isEqual(pType a, pType b){
     if(a->kind != b->kind)
         return 1;
     pFieldList apf, bpf;
-    switch(a.kind){
+    switch(a->kind){
         case BASIC: 
             if(a->u.basic != b->u.basic)    return 1;
             break;
@@ -63,7 +63,7 @@ int isEqual(pType a, pType b){
             }
             break;
         case STRUCTURE:
-            return isEqual(a->u.structure->type, b->structure->type);            
+            return isEqual(a->u.structure->type, b->u.structure->type);            
             break;
         case STRUCT_TAG:    
             apf = a->u.member;
@@ -381,6 +381,16 @@ pType Exp(Node* node) {
                 pt = hashtable[i]->type;
             }
         }
+        else{
+            pt = (pType)calloc(1, sizeof(Type_));
+            pt->kind = BASIC;
+            if(strcmp(node->children[0]->name, "INT") == 0){
+                pt->u.basic = 0;
+            }
+            else{
+                pt->u.basic = 1;
+            }
+        }
         // no error when INT or FLOAT
     }
     else if(node->childSum == 2){   //Exp -> MINUS Exp | NOT Exp
@@ -419,8 +429,22 @@ pType Exp(Node* node) {
             }
         }
         else{   //Exp -> Exp (ASSIGNOP | AND | OR | RELOP | PLUS | MINUS | STAR | DIV) Exp
-            Exp(node->children[0]);
-            Exp(node->children[2]);
+            pt = Exp(node->children[0]);
+            pType p = Exp(node->children[2]);
+            if(strcmp(node->children[1]->name, "ASSIGNOP") == 0){   //Exp -> Exp ASSIGNOP Exp
+                if(isEqual(pt, p) == 1){
+                    printf("Error type 5 at Line %d: Type mismatched for assignment\n", node->children[0]->lineno);
+                }
+                else if(!( (strcmp(node->children[0]->children[0]->name, "ID") == 0 && node->children[0]->childSum == 1)
+                        || (strcmp(node->children[0]->children[0]->name, "Exp") == 0 && node->children[0]->childSum == 4)
+                        || (node->children[0]->childSum == 3 && strcmp(node->children[0]->children[1]->name, "DOT") == 0))){
+                            printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable\n", node->children[0]->lineno);
+                        }
+            }
+            else if(isEqual(pt, p) == 1 || pt->kind != BASIC){
+                printf("Error type 7 at Line %d: Type mismatched for operand\n", node->children[0]->lineno);
+                //last time
+            }
         }
     }
     else{
@@ -441,9 +465,29 @@ pType Exp(Node* node) {
                             printf("Error type 9 at Line %d: Function \"%s\" is not applicable for arguments\n", node->children[0]->lineno, node->children[0]->text);
                             break;
                         }
-
+                        if(isEqual(p->type, pf->type) == 1){
+                            printf("Error type 9 at Line %d: Function \"%s\" is not applicable for arguments\n", node->children[0]->lineno, node->children[0]->text);
+                            break;
+                        }
+                        p = p->tail;
+                        pf = pf->tail;
                     }
                 }
+            }
+        }
+        else if(strcmp(node->children[0]->name, "Exp") == 0){ //Exp -> Exp LB Exp RB
+            pType p1 = Exp(node->children[0]);
+            pType p2 = Exp(node->children[2]);
+            if(p1->kind != ARRAY){
+                printf("Error type 10 at Line %d: Not an array\n", node->children[0]->lineno);
+            }
+            else{
+                while(p1->kind == ARRAY)
+                    p1 = p1->u.array.elem;
+                pt = p1;
+            }
+            if(p2->kind != BASIC || p2->u.basic != 0){
+                printf("Error type 12 at Line %d: Not a integer\n", node->children[0]->lineno);
             }
         }
     }
