@@ -2,7 +2,7 @@
 
 void traverseTree(Node* root) {
     if(root != NULL) Program(root);
-    //show(); // for debug only
+    show(); // for debug only
 }
 
 unsigned int hash(char* name) {
@@ -309,7 +309,10 @@ void Stmt(Node* node, pType pt) {
         Exp(node->children[0]);
     }
     else if(node->childSum == 3){   //Stmt -> RETURN Exp SEMI
-        Exp(node->children[1]);
+        pType pret = Exp(node->children[1]);
+        if(!pret)   return;
+        if(isEqual(pt, pret) == 1)
+            printf("Error type 8 at Line %d: Type mismatched for return\n", node->children[0]->lineno);
     }
     else if(node->childSum == 5){   //Stmt -> IF LP Exp RP Stmt | WHILE LP Exp RP Stmt
         Exp(node->children[2]);
@@ -394,12 +397,14 @@ pType Exp(Node* node) {
         // no error when INT or FLOAT
     }
     else if(node->childSum == 2){   //Exp -> MINUS Exp | NOT Exp
-        Exp(node->children[1]);
+        pt = Exp(node->children[1]);
+        if(!pt) return NULL;
     }
     else if(node->childSum == 3)
     {
         if(strcmp(node->children[0]->name, "LP") == 0){ //Exp -> LP Exp RP
-            Exp(node->children[1]);
+            pt = Exp(node->children[1]);
+            if(!pt) return NULL;
         }
         else if(strcmp(node->children[0]->name, "ID") == 0){    //Exp -> ID LP RP
             if(lookup(node->children[0]->text) == -1)
@@ -408,10 +413,16 @@ pType Exp(Node* node) {
                 int i = lookup(node->children[0]->text);
                 if(hashtable[i]->type->kind != FUNCTION)
                     printf("Error type 11 at Line %d: \"%s\" is not a function\n", node->children[0]->lineno, node->children[0]->text);
+                else 
+                    pt = hashtable[i]->type;
             }
         }
         else if(strcmp(node->children[2]->name, "ID") == 0){    //Exp -> Exp DOT ID
+            //printf("%s\n",node->children[2]->text);
             pt = Exp(node->children[0]);
+            //printf("after %s\n",node->children[2]->text);
+            if(!pt) return NULL;
+            //printf("point\n");
             if(pt->kind != STRUCTURE)
                 printf("Error type 13 at Line %d: Illegal use of \".\"\n", node->children[0]->lineno);
             else{
@@ -420,6 +431,7 @@ pType Exp(Node* node) {
                 while(f){
                     if(strcmp(node->children[2]->text, f->name) == 0){
                         isMember = 1;
+                        pt = f->type;
                         break;
                     }
                     f = f->tail;
@@ -430,7 +442,9 @@ pType Exp(Node* node) {
         }
         else{   //Exp -> Exp (ASSIGNOP | AND | OR | RELOP | PLUS | MINUS | STAR | DIV) Exp
             pt = Exp(node->children[0]);
+            if(!pt) return NULL;
             pType p = Exp(node->children[2]);
+            if(!p)  return NULL;
             if(strcmp(node->children[1]->name, "ASSIGNOP") == 0){   //Exp -> Exp ASSIGNOP Exp
                 if(isEqual(pt, p) == 1){
                     printf("Error type 5 at Line %d: Type mismatched for assignment\n", node->children[0]->lineno);
@@ -443,7 +457,6 @@ pType Exp(Node* node) {
             }
             else if(isEqual(pt, p) == 1 || pt->kind != BASIC){
                 printf("Error type 7 at Line %d: Type mismatched for operand\n", node->children[0]->lineno);
-                //last time
             }
         }
     }
@@ -456,6 +469,7 @@ pType Exp(Node* node) {
                 if(hashtable[i]->type->kind != FUNCTION)
                     printf("Error type 11 at Line %d: \"%s\" is not a function\n", node->children[0]->lineno, node->children[0]->text);
                 else{
+                    pt = hashtable[i]->type;
                     pFieldList pf = Args(node->children[2]);
                     pFieldList p = hashtable[i]->type->u.function.argv;
                     //int argc = hashtable[i]->type->u.function.argc;
@@ -478,6 +492,7 @@ pType Exp(Node* node) {
         else if(strcmp(node->children[0]->name, "Exp") == 0){ //Exp -> Exp LB Exp RB
             pType p1 = Exp(node->children[0]);
             pType p2 = Exp(node->children[2]);
+            if(!p1) return NULL;
             if(p1->kind != ARRAY){
                 printf("Error type 10 at Line %d: Not an array\n", node->children[0]->lineno);
             }
@@ -486,6 +501,7 @@ pType Exp(Node* node) {
                     p1 = p1->u.array.elem;
                 pt = p1;
             }
+            if(!p2) return NULL;
             if(p2->kind != BASIC || p2->u.basic != 0){
                 printf("Error type 12 at Line %d: Not a integer\n", node->children[0]->lineno);
             }
@@ -500,6 +516,7 @@ pFieldList Args(Node* node){
     //pType pt = (pType)calloc(1, sizeof(Type_));
     pFieldList pf = (pFieldList)calloc(1, sizeof(FieldList_));
     pType pt = Exp(node->children[0]);
+    if(!pt) return NULL;
     pf->type = pt;
     pf->tail = NULL;    //Args -> Exp
     if(node->childSum == 3){    //Args -> Exp COMMA Args

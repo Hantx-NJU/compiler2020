@@ -47,8 +47,7 @@ ExtDefList  : ExtDef ExtDefList                 {$$ = NewNode("ExtDefList", "");
 ExtDef      : Specifier ExtDecList SEMI         {$$ = NewNode("ExtDef", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
             | Specifier SEMI                    {$$ = NewNode("ExtDef", ""); AddChild($$, $1); AddChild($$, $2);}
             | Specifier FunDec CompSt           {$$ = NewNode("ExtDef", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
-            | Specifier error SEMI              {synerror("syntax error, the global variable cannot be initialized in the definition.");}
-            |error                              {synerror("syntax error, AAA.");}
+            | Specifier error                   {synerror("syntax error, the global variable cannot be initialized in the definition.");}
             ;
 ExtDecList  : VarDec                            {$$ = NewNode("ExtDecList", ""); AddChild($$, $1);}
             | VarDec COMMA ExtDecList           {$$ = NewNode("ExtDecList", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
@@ -96,7 +95,7 @@ Stmt        : Exp SEMI                                  {$$ = NewNode("Stmt", ""
             | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE   {$$ = NewNode("Stmt", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3); AddChild($$, $4); AddChild($$, $5);}
             | IF LP Exp RP Stmt ELSE Stmt               {$$ = NewNode("Stmt", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3); AddChild($$, $4); AddChild($$, $5);AddChild($$, $6); AddChild($$, $7);}
             | WHILE LP Exp RP Stmt                      {$$ = NewNode("Stmt", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3); AddChild($$, $4); AddChild($$, $5);}
-            | Exp error SEMI                            {synerror("syntax error, near ';'");}  
+            | Exp error                                 {synerror("syntax error");}  
             | IF LP Exp error RP Stmt ELSE Stmt         {synerror("syntax error, near 'RP'");}  
             ;
 
@@ -105,7 +104,7 @@ DefList     : Def DefList                       {$$ = NewNode("DefList", ""); Ad
             | /* empty */                       {$$ = NULL;}
             ;   
 Def         : Specifier DecList SEMI            {$$ = NewNode("Def", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
-            | error SEMI                        {synerror("syntax error, near ';'");}  
+            | Specifier error SEMI              {synerror("syntax error, near ';'");}  
             ;
 DecList     : Dec                               {$$ = NewNode("DecList", ""); AddChild($$, $1);}
             | Dec COMMA DecList                 {$$ = NewNode("DecList", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
@@ -133,7 +132,8 @@ Exp     : Exp ASSIGNOP Exp                      {$$ = NewNode("Exp", ""); AddChi
         | ID                                    {$$ = NewNode("Exp", ""); AddChild($$, $1);}
         | INT                                   {$$ = NewNode("Exp", ""); AddChild($$, $1);}
         | FLOAT                                 {$$ = NewNode("Exp", ""); AddChild($$, $1);}
-        | error                                 {synerror("syntax error, about Exp");}  
+        | ID LP error                                 {synerror("syntax error, about Exp");}
+        | Exp LB error                                 {synerror("syntax error, about Exp");}  
         ;
 Args    : Exp COMMA Args                        {$$ = NewNode("Args", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
         | Exp                                   {$$ = NewNode("Args", ""); AddChild($$, $1);}
