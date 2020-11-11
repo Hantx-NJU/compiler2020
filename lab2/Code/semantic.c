@@ -2,7 +2,7 @@
 
 void traverseTree(Node* root) {
     if(root != NULL) Program(root);
-    show(); // for debug only
+    //show(); // for debug only
 }
 
 unsigned int hash(char* name) {
@@ -359,9 +359,11 @@ void Dec(Node* node, pType pt, pFieldList pf) {
         VarDec(node->children[0], pt, pf);
     }
     else if(node->childSum == 3) { // Dec -> VarDec ASSIGNOP Exp
-        if(pf->type->kind == STRUCT_TAG) {
-            printf("Error type 15 at Line %d: Initialized field while defining.\n", node->children[0]->lineno);
-            return;
+        if(pf != NULL){
+            if(pf->type->kind == STRUCT_TAG) {
+                printf("Error type 15 at Line %d: Initialized field while defining.\n", node->children[0]->lineno);
+                return;
+            }
         }
         VarDec(node->children[0], pt, pf);
         // TODO
