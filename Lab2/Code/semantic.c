@@ -156,7 +156,6 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
     if(node == NULL) return;
     assert(node->childSum == 1 || node->childSum == 4);
     if(node->childSum == 1) {   // VarDec -> ID
-        printf("flag1\n");
         if(lookup(node->children[0]->text) != -1) { // ID已经在hash中
             if(pf != NULL){
                 if(pf->type->kind == STRUCT_TAG)
@@ -297,9 +296,11 @@ void Dec(Node* node, pType pt, pFieldList pf) {
         VarDec(node->children[0], pt, pf);
     }
     else if(node->childSum == 3) { // Dec -> VarDec ASSIGNOP Exp
-        if(pf->type->kind == STRUCT_TAG) {
-            printf("Error type 15 at Line %d: Initialized field while defining.\n", node->children[0]->lineno);
-            return;
+        if(pf != NULL) {
+            if(pf->type->kind == STRUCT_TAG) {
+                printf("Error type 15 at Line %d: Initialized field while defining.\n", node->children[0]->lineno);
+                return;
+            }
         }
         VarDec(node->children[0], pt, pf);
         // TODO
