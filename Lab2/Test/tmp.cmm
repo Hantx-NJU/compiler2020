@@ -1,0 +1,3 @@
+int swap(int aa[0], int x, int y) {
+  int t = aa[x];
+}

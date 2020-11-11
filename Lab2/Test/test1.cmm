@@ -1,0 +1,25 @@
+struct A{
+    int a, b;
+    float c;
+}S;
+
+int hello(int o){
+    3;
+    int x;
+    return 6.6;
+}
+
+int foo(){
+    int aa[5];
+    float ff[3];
+    int l;
+    aa[0.5];
+    l = aa[1];
+   
+    l - 6 = l;
+    5+6;
+    5+6.5;
+    aa[1] * ff[2];
+    S.a * S.c;
+    return 3.2;
+}
