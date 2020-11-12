@@ -54,6 +54,17 @@ test:
 	./parser ../Test/A-18.cmm
 	./parser ../Test/A-19.cmm
 	./parser ../Test/A-20.cmm
+	./parser ../Test/A-20.cmm
+	./parser ../Test/B-1.cmm
+	./parser ../Test/B-2.cmm
+	./parser ../Test/C-1.cmm
+	./parser ../Test/C-2.cmm
+	./parser ../Test/D-1.cmm
+	./parser ../Test/D-2.cmm
+	./parser ../Test/D-3.cmm
+	#./parser ../Test/E2_1.cmm
+	#./parser ../Test/E2_2.cmm
+	./parser ../Test/E2_3.cmm
 
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
