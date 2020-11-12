@@ -47,7 +47,7 @@ ExtDefList  : ExtDef ExtDefList                 {$$ = NewNode("ExtDefList", "");
 ExtDef      : Specifier ExtDecList SEMI         {$$ = NewNode("ExtDef", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
             | Specifier SEMI                    {$$ = NewNode("ExtDef", ""); AddChild($$, $1); AddChild($$, $2);}
             | Specifier FunDec CompSt           {$$ = NewNode("ExtDef", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
-            | Specifier error                   {synerror("syntax error, the global variable cannot be initialized in the definition.");}
+            | Specifier error SEMI                  {synerror("syntax error, the global variable cannot be initialized in the definition.");}
             ;
 ExtDecList  : VarDec                            {$$ = NewNode("ExtDecList", ""); AddChild($$, $1);}
             | VarDec COMMA ExtDecList           {$$ = NewNode("ExtDecList", ""); AddChild($$, $1); AddChild($$, $2); AddChild($$, $3);}
