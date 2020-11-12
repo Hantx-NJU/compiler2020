@@ -158,10 +158,12 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
     if(node->childSum == 1) {   // VarDec -> ID
         if(lookup(node->children[0]->text) != -1) { // ID已经在hash中
             if(pf != NULL){
-                if(pf->type->kind == STRUCT_TAG)
+                if(pf->type->kind == STRUCT_TAG) {
                     printf("Error type 15 at Line %d: Redefined field \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+                    return;
+                }
             }
-            else printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+            printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
             return;
         }
         pFieldList npf = (pFieldList)calloc(1, sizeof(FieldList_));
@@ -208,7 +210,9 @@ void FunDec(Node* node, pType pt) {
     // for both production
     if(lookup(node->children[0]->text) != -1) { // ID 已经在hash中
         printf("Error type 4 at Line %d: Redefined function \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
-        return;
+        if(node->childSum == 4) { // FunDec -> ID LP VarList RP
+            return VarList(node->children[2], NULL);
+        }
     }
     pFieldList pf = (pFieldList)calloc(1, sizeof(FieldList_));
     pType npt = (pType)calloc(1, sizeof(Type_));
