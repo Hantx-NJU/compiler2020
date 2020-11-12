@@ -194,13 +194,14 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
     if(node == NULL) return;
     assert(node->childSum == 1 || node->childSum == 4);
     if(node->childSum == 1) {   // VarDec -> ID
-        //printf("flag1\n");
         if(lookup(node->children[0]->text) != -1) { // ID已经在hash中
             if(pf != NULL){
-                if(pf->type->kind == STRUCT_TAG)
+                if(pf->type->kind == STRUCT_TAG){
                     printf("Error type 15 at Line %d: Redefined field \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+                    return;
+                }
             }
-            else printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
+            printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
             return;
         }
         pFieldList npf = (pFieldList)calloc(1, sizeof(FieldList_));
@@ -247,7 +248,10 @@ void FunDec(Node* node, pType pt) {
     // for both production
     if(lookup(node->children[0]->text) != -1) { // ID 已经在hash中
         printf("Error type 4 at Line %d: Redefined function \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
-        return;
+        //return;
+        if(node->childSum == 4){    //FunDec -> ID LP VarList RP
+            return VarList(node->children[2], NULL);
+        }
     }
     pFieldList pf = (pFieldList)calloc(1, sizeof(FieldList_));
     pType npt = (pType)calloc(1, sizeof(Type_));
@@ -448,14 +452,14 @@ pType Exp(Node* node) {
             pType p = Exp(node->children[2]);
             if(!p)  return NULL;
             if(strcmp(node->children[1]->name, "ASSIGNOP") == 0){   //Exp -> Exp ASSIGNOP Exp
-                if(isEqual(pt, p) == 1){
-                    printf("Error type 5 at Line %d: Type mismatched for assignment\n", node->children[0]->lineno);
-                }
-                else if(!( (strcmp(node->children[0]->children[0]->name, "ID") == 0 && node->children[0]->childSum == 1)
+                if(!( (strcmp(node->children[0]->children[0]->name, "ID") == 0 && node->children[0]->childSum == 1)
                         || (strcmp(node->children[0]->children[0]->name, "Exp") == 0 && node->children[0]->childSum == 4)
                         || (node->children[0]->childSum == 3 && strcmp(node->children[0]->children[1]->name, "DOT") == 0))){
                             printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable\n", node->children[0]->lineno);
                         }
+                else if(isEqual(pt, p) == 1){
+                    printf("Error type 5 at Line %d: Type mismatched for assignment\n", node->children[0]->lineno);
+                }
             }
             else if(isEqual(pt, p) == 1 || pt->kind != BASIC){
                 printf("Error type 7 at Line %d: Type mismatched for operand\n", node->children[0]->lineno);
@@ -471,7 +475,7 @@ pType Exp(Node* node) {
                 if(hashtable[i]->type->kind != FUNCTION)
                     printf("Error type 11 at Line %d: \"%s\" is not a function\n", node->children[0]->lineno, node->children[0]->text);
                 else{
-                    pt = hashtable[i]->type;
+                    pt = hashtable[i]->type->u.function.ret;
                     pFieldList pf = Args(node->children[2]);
                     pFieldList p = hashtable[i]->type->u.function.argv;
                     //int argc = hashtable[i]->type->u.function.argc;
