@@ -164,7 +164,7 @@ void VarDec(Node* node, pType pt, pFieldList pf) {
                 }
             }
             printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", node->children[0]->lineno, node->children[0]->text);
-            return;
+            //return;
         }
         pFieldList npf = (pFieldList)calloc(1, sizeof(FieldList_));
         npf->name = node->children[0]->text;

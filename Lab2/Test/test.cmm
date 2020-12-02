@@ -1,12 +1,5 @@
-int a;
-int b[2];
-int c[4][3];
-int func1(){}
-int func2(int p1, int p2){float l1;}
+int func1(int p1, int p2){float f1;}
 struct S1
 {
-    int m1;
-    float m2[3][5];
-}s;
-struct S1 s1;
-struct {int real, image;} s2;
+    float m1[3][5];
+} s;

@@ -1,0 +1,4 @@
+struct OneDimVector {
+  int id;
+  float x;
+};

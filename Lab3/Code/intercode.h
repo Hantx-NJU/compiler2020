@@ -9,11 +9,11 @@
 
 typedef struct Operand* pOperand;
 typedef struct Operand{
-    enum {VARIABLE, CONSTANT, ADDRESS, LABEL, FUNCTION, STRUCTURE} kind;
+    enum {VARIABLE, CONSTANT, ADDRESS, OPLABEL, FUNCTION, STRUCTURE} kind;
     union{
-        int var_no;
-        char value[32];
-        pOperand target;
+        int no;          // VARIABLE，ADDRESS, OPLABEL, STRUCTURE
+        int val;         // CONSTANT
+        char* name;      // FUNCTION
     } u;
 } Operand;
 
@@ -100,6 +100,7 @@ pOperand new_label();
 // 其他功能函数
 void init();
 void ShowAllInterCodes();   // 显示全部
-void ShowInterCode(pInterCodes p);  // 显示某个
+void ShowInterCode(pInterCodes p);  // 显示某行代码
+void ShowOperand(pOperand p); // 显示某个操作数
 
 #endif
