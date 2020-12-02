@@ -579,6 +579,7 @@ void show() {
             printf("\n");
         }
     }
+    printf("\n\n");
 }
 
 void showtype(pType pt) {
