@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include "tree.h"
-#include "semantic.h"
+# include <stdio.h>
+# include "tree.h"
+# include "semantic.h"
+# include "intercode.h"
 
 extern FILE* yyin;
 extern int yylineno;
@@ -42,10 +43,13 @@ int main(int argc, char** argv) {
     yyparse();
     if(!ErrorNum && root)
     {
-        //PreOrder(root, 0);    //We don't need to print parser tree in lab2
+        PreOrder(root, 0);    //We don't need to print parser tree in lab2
         //printf("\n");
+        // 语义分析
         initHashtable();
         traverseTree(root);
+        // 中间代码生成
+        translate(root);
     }
     return 0;
 }

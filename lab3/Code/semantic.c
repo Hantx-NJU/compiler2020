@@ -1,8 +1,9 @@
 # include "semantic.h"
 
 void traverseTree(Node* root) {
+    // 遍历语法树
     if(root != NULL) Program(root);
-    //show(); // for debug only
+    show(); // for debug only
 }
 
 unsigned int hash(char* name) {
@@ -20,6 +21,45 @@ void initHashtable() {
     for(int i = 0; i < HASHTABLE_SIZE; ++i) {
         hashtable[i] = NULL;
     }
+    // 将 read 加入符号表
+    pFieldList pf = (pFieldList)calloc(1, sizeof(FieldList_));
+    pType pt = (pType)calloc(1, sizeof(Type_));
+    pf->name = (char*)malloc(sizeof("read"));
+    strcpy(pf->name, "read");
+    pf->type = pt;
+    pf->tail = NULL;
+    pt->kind = FUNCTION;
+    pt->u.function.argc = 0;
+    pt->u.function.argv = NULL;
+    pType npt = (pType)calloc(1, sizeof(Type_));
+    pt->u.function.ret = npt;
+    npt->kind = BASIC;
+    npt->u.basic = BASIC_INT;
+    insert(pf);
+    // 将 write 加入符号表
+    pFieldList pfw = (pFieldList)calloc(1, sizeof(FieldList_));
+    pType ptw = (pType)calloc(1, sizeof(Type_));
+    pfw->name = (char*)malloc(sizeof("write"));
+    strcpy(pfw->name, "write");
+    pfw->type = ptw;
+    pfw->tail = NULL;
+    ptw->kind = FUNCTION;
+    ptw->u.function.argc = 1;
+    pType nptw = (pType)calloc(1, sizeof(Type_));
+    nptw->kind = BASIC;
+    nptw->u.basic = BASIC_INT;
+    ptw->u.function.ret = nptw;
+    pFieldList pfa = (pFieldList)calloc(1, sizeof(FieldList_));
+    ptw->u.function.argv = pfa;
+    pfa->name = (char*)malloc(sizeof("write_arg"));
+    strcpy(pfa->name, "write_arg");
+    pType pta = (pType)calloc(1, sizeof(Type_));
+    pfa->type = pta;
+    pfa->tail = NULL;
+    pta->kind = BASIC;
+    pta->u.basic = BASIC_INT;
+    insert(pfa);
+    insert(pfw);
 }
 
 // 闭散列， 线性探测
@@ -539,6 +579,7 @@ void show() {
             printf("\n");
         }
     }
+    printf("\n\n");
 }
 
 void showtype(pType pt) {
