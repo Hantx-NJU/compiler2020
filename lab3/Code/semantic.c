@@ -3,7 +3,7 @@
 void traverseTree(Node* root) {
     // 遍历语法树
     if(root != NULL) Program(root);
-    show(); // for debug only
+    //show(); // for debug only
 }
 
 unsigned int hash(char* name) {

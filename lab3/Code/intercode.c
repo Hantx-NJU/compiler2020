@@ -72,9 +72,11 @@ pInterCodes translate_FunDec(Node* node) {
 
 pInterCodes translate_CompSt(Node* node) {
     assert(node != NULL);
-    assert(node->childSum == 4);    // Compst -> DefList StmtList RC
+    assert(node->childSum == 4);    // Compst -> LC DefList StmtList RC
+    assert(node->children[1] != NULL);
     pInterCodes p1 = translate_DefList(node->children[1]);
     pInterCodes p2 = translate_StmtList(node->children[2]);
+    assert(p1 != NULL);
     if(p2!= NULL) concat(p1, p2);
     return p1;
 }
@@ -90,9 +92,96 @@ pInterCodes translate_StmtList(Node* node) {
 
 pInterCodes translate_Stmt(Node* node) {
     // TODO
+    if(node == NULL) return NULL;
+    assert(node->childSum == 1 || node->childSum == 2 || node->childSum == 3 
+        || node->childSum == 5 || node->childSum == 7);
+    if(node->childSum == 2){    // Stmt -> Exp SEMI
+        pInterCodes code = translate_Exp(node->children[0], NULL);
+        return code;
+    }
+    else if(node->childSum == 1){   // Stmt -> CompSt
+        pInterCodes code = translate_CompSt(node->children[0]);
+        return code;
+    }
+    else if(node->childSum == 3){   // Stmt -> RETURN Exp SEMI
+        pOperand t1 = new_temp();
+        pInterCodes code1 = translate_Exp(node->children[1], t1);
+        pInterCodes code2 = new_pInterCodes();
+        code2->code.kind = CDRETURN;
+        code2->code.u.singleOP.op = t1;
+        concat(code1, code2);
+        return code1;
+    }
+    else if(node->childSum == 5){
+        if(strcmp(node->children[0]->name, "IF") == 0){    // Stmt -> IF LP Exp RP Stmt
+            pOperand label1 = new_label();
+            pOperand label2 = new_label();
+            pInterCodes code1 = translate_Cond(node->children[2], label1, label2);
+            pInterCodes code2 = translate_Stmt(node->children[4]);
+            pInterCodes code11 = new_pInterCodes();
+            pInterCodes code21 = new_pInterCodes();
+            code11->code.kind = LABEL;
+            code11->code.u.singleOP.op = label1;
+            code21->code.kind = LABEL;
+            code21->code.u.singleOP.op = label2;
+            concat(code1, code11);
+            concat(code1, code2);
+            concat(code1, code21);
+            return code1;
+        }
+        else if(strcmp(node->children[0]->name, "WHILE") == 0){   //Stmt -> WHILE LP Exp RP Stmt
+            pOperand label1 = new_label();
+            pOperand label2 = new_label();
+            pOperand label3 = new_label();
+            pInterCodes code1 = translate_Cond(node->children[2], label2, label3);
+            pInterCodes code2 = translate_Stmt(node->children[4]);
+            pInterCodes code0 = new_pInterCodes();
+            pInterCodes code11 = new_pInterCodes();
+            pInterCodes code21 = new_pInterCodes();
+            code0->code.kind = LABEL;
+            code0->code.u.singleOP.op = label1;
+            code11->code.kind = LABEL;
+            code11->code.u.singleOP.op = label2;
+            code21->code.kind = LABEL;
+            code21->code.u.singleOP.op = label3;
+            concat(code0, code1);
+            concat(code0, code11);
+            concat(code0, code2);
+            concat(code0, code21);
+            return code0;
+        }
+    }
+    else if(node->childSum == 7){   // Stmt -> IF LP Exp RP Stmt ELSE Stmt
+        pOperand label1 = new_label();
+        pOperand label2 = new_label();
+        pOperand label3 = new_label();
+        pInterCodes code1 = translate_Cond(node->children[2], label1, label2);
+        pInterCodes code2 = translate_Stmt(node->children[4]);
+        pInterCodes code3 = translate_Stmt(node->children[6]);
+        pInterCodes code11 = new_pInterCodes();
+        pInterCodes code21 = new_pInterCodes();
+        pInterCodes code22 = new_pInterCodes();
+        pInterCodes code31 = new_pInterCodes();
+        code11->code.kind = LABEL;
+        code11->code.u.singleOP.op = label1;
+        code21->code.kind = GOTO;
+        code21->code.u.singleOP.op = label3;
+        code22->code.kind = LABEL;
+        code22->code.u.singleOP.op = label2;
+        code31->code.kind = LABEL;
+        code31->code.u.singleOP.op = label3;
+        concat(code1, code11);
+        concat(code1, code2);
+        concat(code1, code21);
+        concat(code1, code22);
+        concat(code1, code3);
+        concat(code1, code31);
+        return code1;
+    }
 }
 
 pInterCodes translate_DefList(Node* node) {
+    assert(node != NULL);
     if(node == NULL) return NULL;
     assert(node->childSum == 2);    // DefList -> Def DefList
     pInterCodes p1 = translate_Def(node->children[0]);
@@ -129,7 +218,7 @@ pInterCodes translate_Dec(Node* node) {
     }
     else { // Dec -> VarDec ASSIGNOP Exp
         assert(node->children[0]->childSum == 1);    // Exp 不会是 ARRAY，参考错误类型 5，VarDec 只能是 BASIC
-        int index = lookup(node->children[0]->children[0]);
+        int index = lookup(node->children[0]->text);    //fixed ,the last was node->children[0]->children[0]
         assert(hashtable[index]->type->kind == BASIC);  // Exp 只能是 BASIC，参考错误类型 5，VarDec 只能是 BASIC
         pOperand p = new_pOperand();    // VarDec
         p->kind = VARIABLE;
@@ -140,9 +229,135 @@ pInterCodes translate_Dec(Node* node) {
 
 pInterCodes translate_Exp(Node* node, pOperand place) {
     // TODO
+    assert(node != NULL);
+    assert(node->childSum == 1 || node->childSum == 2 || node->childSum == 3 || node->childSum == 4);
+    if(node->childSum == 1){
+        if(strcmp(node->children[0]->name, "INT") == 0){    // Exp -> INT
+            int value = atoi(node->children[0]->text);
+            pOperand p = new_pOperand();
+            p->kind = CONSTANT;
+            p->u.val = value;
+            pInterCodes code = new_pInterCodes();
+            code->code.kind = ASSIGN;
+            code->code.u.doubleOP.left = place;
+            code->code.u.doubleOP.right = p;
+            return code;
+        }
+        else if(strcmp(node->children[0]->name, "ID") == 0){    // Exp -> ID
+            int i = lookup(node->children[0]->text);
+            pOperand p = new_pOperand();
+            p->kind = VARIABLE;
+            strcpy(p->u.name, hashtable[i]->name);
+            pInterCodes code = new_pInterCodes();
+            code->code.kind = ASSIGN;
+            code->code.u.doubleOP.left = place;
+            code->code.u.doubleOP.right = p;
+            return code;
+        }
+    }
+    else if(node->childSum == 2){
+        if(strcmp(node->children[0]->name, "MINUS") == 0){    // Exp -> MINUS Exp
+            pOperand t1 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[1], t1);
+            pInterCodes code2 = new_pInterCodes();
+            pOperand op1 = new_pOperand();
+            op1->kind = CONSTANT;
+            op1->u.val = 0;
+            code2->code.kind = SUB;
+            code2->code.u.tripleOP.result = place;
+            code2->code.u.tripleOP.op1 = op1;
+            code2->code.u.tripleOP.op2 = t1;
+            concat(code1, code2);
+            return code1;
+        }
+        else if(strcmp(node->children[0]->name, "MINUS") == 0){    // Exp -> NOT Exp
+            pInterCodes code = Exp_to_Cond(node, place);
+            return code;
+        }
+    }
+    else if(node->childSum == 3){
+        if(strcmp(node->children[1]->name, "ASSIGNOP") == 0){    // Exp -> Exp ASSIGNOP Exp
+            int i = lookup(node->children[0]->children[0]->text);
+            pOperand p = new_pOperand();
+            p->kind = VARIABLE;
+            strcpy(p->u.name, hashtable[i]->name);
+            pOperand t1 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[2], t1);
+            pOperand op21l = new_pOperand();
+            op21l->kind = VARIABLE;
+            pInterCodes code21 = new_pInterCodes();
+            code21->code.kind = ASSIGN;
+            code21->code.u.doubleOP.left = p;
+            code21->code.u.doubleOP.right = t1;
+            pInterCodes code22 = new_pInterCodes();
+            code22->code.kind = ASSIGN;
+            code22->code.u.doubleOP.left = place;
+            code22->code.u.doubleOP.right = p;
+            concat(code1, code21);
+            concat(code1, code22);
+            return code1;
+        }
+        else if(strcmp(node->children[1]->name, "PLUS") == 0){    // Exp -> Exp PLUS Exp
+            pOperand t1 = new_temp();
+            pOperand t2 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[0], t1);
+            pInterCodes code2 = translate_Exp(node->children[2], t2);
+            pInterCodes code3 = new_pInterCodes();
+            code3->code.kind = ADD;
+            code3->code.u.tripleOP.result = place;
+            code3->code.u.tripleOP.op1 = t1;
+            code3->code.u.tripleOP.op2 = t2;
+            concat(code1, code2);
+            concat(code1, code3);
+            return code1;
+        }
+        else if(strcmp(node->children[1]->name, "LP") == 0){    // Exp -> ID LP RP
+            //TODO: FUNCTION
+        }
+        else if(strcmp(node->children[1]->name, "RELOP") == 0   // Exp -> Exp RELOP Exp
+                || strcmp(node->children[1]->name, "AND") == 0  // Exp -> Exp AND Exp
+                || strcmp(node->children[1]->name, "OR") == 0){    // Exp -> Exp OR Exp
+            pInterCodes code = Exp_to_Cond(node, place);
+            return code;
+        }
+    }
+    else if(node->childSum == 4){
+        //TODO
+    }
     return NULL;
 }
 
+pInterCodes Exp_to_Cond(Node* node, pOperand place){
+    pOperand label1 = new_label();
+    pOperand label2 = new_label();
+    pOperand op0r = new_pOperand();
+    op0r->kind = CONSTANT;
+    op0r->u.val = 0;
+    pInterCodes code0 = new_pInterCodes();  //[place := #0]
+    code0->code.kind = ASSIGN;
+    code0->code.u.doubleOP.left = place;
+    code0->code.u.doubleOP.right = op0r;
+    pInterCodes code1 = translate_Cond(node, label1, label2);
+    pOperand op21 = new_pOperand();
+    op21->kind = CONSTANT;
+    op21->u.val = 1;
+    pInterCodes code2 = new_pInterCodes();
+    code2->code.kind = LABEL;
+    code2->code.u.singleOP.op = label1;
+    pInterCodes code21 = new_pInterCodes();
+    code21->code.kind = ASSIGN;
+    code21->code.u.doubleOP.left = place;
+    code21->code.u.doubleOP.right = op21;
+    //concat(code2, code21);
+    pInterCodes code3 = new_pInterCodes();  //[LABEL label2]
+    code3->code.kind = LABEL;
+    code3->code.u.singleOP.op = label2;
+    concat(code0, code1);
+    concat(code0, code2);
+    concat(code0, code21);
+    concat(code0, code3);
+    return code0;
+}
 pInterCodes translate_Args(Node* node, pArgList arg_list) {
     assert(node != NULL);
     assert(node->childSum == 1 || node->childSum == 3);
@@ -164,6 +379,71 @@ pInterCodes translate_Args(Node* node, pArgList arg_list) {
 
 pInterCodes translate_Cond(Node* node, pOperand label_true, pOperand label_false) {
     // TODO
+    assert(node != NULL);
+    if(node->childSum == 2 && strcmp(node->children[0]->name, "NOT") == 0){    //Exp -> NOT Exp
+        pInterCodes code = translate_Cond(node->children[1], label_false, label_true);
+        return code;
+    }
+    else if(node->childSum == 3 && strcmp(node->children[1]->name, "RELOP") == 0){  // Exp -> Exp RELOP Exp
+        pOperand t1 = new_temp();
+        pOperand t2 = new_temp();
+        pInterCodes code1 = translate_Exp(node->children[0], t1);
+        pInterCodes code2 = translate_Exp(node->children[2], t2);
+        pInterCodes code3 = new_pInterCodes();
+        code3->code.kind = IF_GOTO;
+        code3->code.u.if_gotoOP.op1 = t1;
+        code3->code.u.if_gotoOP.op2 = t2;
+        code3->code.u.if_gotoOP.label = label_true;
+        strcpy(code3->code.u.if_gotoOP.relop, node->children[1]->text);
+        pInterCodes code31 = new_pInterCodes();
+        code31->code.kind = GOTO;
+        code31->code.u.singleOP.op = label_false;
+        concat(code1, code2);
+        concat(code1, code3);
+        concat(code1, code31);
+        return code1;
+    }
+    else if(node->childSum == 3 && strcmp(node->children[1]->name, "AND") == 0){ // Exp -> Exp AND Exp
+        pOperand label1 = new_label();
+        pInterCodes code1 = translate_Cond(node->children[0], label1, label_false);
+        pInterCodes code2 = translate_Cond(node->children[2], label_true, label_false);
+        pInterCodes code11 = new_pInterCodes();
+        code11->code.kind = LABEL;
+        code11->code.u.singleOP.op = label1;
+        concat(code1, code11);
+        concat(code1, code2);
+        return code1;
+    }
+    else if(node->childSum == 3 && strcmp(node->children[1]->name, "OR") == 0){ // Exp -> Exp OR Exp
+        pOperand label1 = new_label();
+        pInterCodes code1 = translate_Cond(node->children[0], label_true, label1);
+        pInterCodes code2 = translate_Cond(node->children[2], label_true, label_false);
+        pInterCodes code11 = new_pInterCodes();
+        code11->code.kind = LABEL;
+        code11->code.u.singleOP.op = label1;
+        concat(code1, code11);
+        concat(code1, code2);
+        return code1;
+    }
+    else{   // other cases
+        pOperand t1 = new_temp();
+        pOperand op22 = new_pOperand();
+        op22->kind = CONSTANT;
+        op22->u.val = 0;
+        pInterCodes code1 = translate_Exp(node, t1);
+        pInterCodes code2 = new_pInterCodes();
+        code2->code.kind = IF_GOTO;
+        code2->code.u.if_gotoOP.op1 = t1;
+        code2->code.u.if_gotoOP.op2 = op22;
+        code2->code.u.if_gotoOP.label = label_true;
+        strcpy(code2->code.u.if_gotoOP.relop, "!=");
+        pInterCodes code21 = new_pInterCodes();
+        code21->code.kind = GOTO;
+        code21->code.u.singleOP.op = label_false;
+        concat(code1, code2);
+        concat(code1, code21);
+        return code1; 
+    }
     return NULL;
 }
 

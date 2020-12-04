@@ -19,7 +19,8 @@ typedef struct Operand{
 
 typedef struct InterCode* pInterCode;
 typedef struct InterCode {
-    enum {LABEL, CDFUNCTION, ASSIGN, ADD, SUB, CDMUL, CDDIV, GET_ADDR, GO_ADDR, STORE_ADDR, GOTO, IF_GOTO,
+    enum {LABEL, CDFUNCTION, ASSIGN, ADD, SUB, CDMUL, CDDIV, 
+            GET_ADDR, GO_ADDR, STORE_ADDR, GOTO, IF_GOTO,
           CDRETURN, DEC, ARG, CALL, PARAM, READ, WRITE} kind;
     union{
         // LABEL x : || FUNCTION f : || GOTO x || RETURN x || ARG x || PARAM x || READ x || WRITE x
@@ -89,6 +90,7 @@ int global_temp_no;
 int global_label_no;
 pOperand new_temp();
 pOperand new_label();
+pInterCodes Exp_to_Cond(Node* node, pOperand place);
 
 // 其他功能函数
 void init();

@@ -34,36 +34,22 @@ syntax-c: $(YFILE)
 # 定义的一些伪目标
 .PHONY: clean 
 test:
-	./parser ../Test/A-1.cmm
-	./parser ../Test/A-2.cmm
-	./parser ../Test/A-3.cmm
-	./parser ../Test/A-4.cmm
-	./parser ../Test/A-5.cmm
-	./parser ../Test/A-6.cmm
-	./parser ../Test/A-7.cmm
-	./parser ../Test/A-8.cmm
-	./parser ../Test/A-9.cmm
-	./parser ../Test/A-10.cmm
-	./parser ../Test/A-11.cmm
-	./parser ../Test/A-12.cmm
-	./parser ../Test/A-13.cmm
-	./parser ../Test/A-14.cmm
-	./parser ../Test/A-15.cmm
-	./parser ../Test/A-16.cmm
-	./parser ../Test/A-17.cmm
-	./parser ../Test/A-18.cmm
-	./parser ../Test/A-19.cmm
-	./parser ../Test/A-20.cmm
-	./parser ../Test/A-20.cmm
-	./parser ../Test/B-1.cmm
-	./parser ../Test/B-2.cmm
-	./parser ../Test/C-1.cmm
-	./parser ../Test/C-2.cmm
-	./parser ../Test/D-1.cmm
-	./parser ../Test/D-2.cmm
-	./parser ../Test/D-3.cmm
-	#./parser ../Test/E2_1.cmm
-	#./parser ../Test/E2_2.cmm
+	./parser ../Test/A_1.cmm
+	./parser ../Test/A_2.cmm
+	./parser ../Test/A_3.cmm
+	./parser ../Test/A_4.cmm
+	./parser ../Test/A_5.cmm
+	./parser ../Test/B_1.cmm
+	./parser ../Test/B_2.cmm
+	./parser ../Test/B_3.cmm
+	./parser ../Test/C_1.cmm
+	./parser ../Test/C_2.cmm
+	./parser ../Test/D_1.cmm
+	./parser ../Test/E1_1.cmm
+	./parser ../Test/E1_2.cmm
+	./parser ../Test/E1_3.cmm
+	./parser ../Test/E2_1.cmm
+	./parser ../Test/E2_2.cmm
 	./parser ../Test/E2_3.cmm
 
 clean:
