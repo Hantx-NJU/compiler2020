@@ -1,3 +1,8 @@
-int s(){
-    int ss;
+int main()
+{
+    int a = 3, b = 8, c = 24;
+    int final;
+    b = (a * a + c / b)  * 4;
+    write(b);
+    
 }

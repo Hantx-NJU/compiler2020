@@ -87,8 +87,10 @@ int lookup(char* name) { // 返回下标， 不在表中返回 -1
 
 int isEqual(pType a, pType b){
     // equal is 0, otherwise is 1
-    if(a->kind != b->kind)
+    if(a->kind != b->kind && b->kind != FUNCTION)
         return 1;
+    if(b->kind == FUNCTION)
+        return isEqual(a, b->u.function.ret);
     pFieldList apf, bpf;
     switch(a->kind){
         case BASIC: 

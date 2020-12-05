@@ -73,11 +73,12 @@ pInterCodes translate_FunDec(Node* node) {
 pInterCodes translate_CompSt(Node* node) {
     assert(node != NULL);
     assert(node->childSum == 4);    // Compst -> LC DefList StmtList RC
-    assert(node->children[1] != NULL);
+    // assert(node->children[1] != NULL);
     pInterCodes p1 = translate_DefList(node->children[1]);
     pInterCodes p2 = translate_StmtList(node->children[2]);
-    assert(p1 != NULL);
-    if(p2!= NULL) concat(p1, p2);
+    //assert(p1 != NULL);
+    if(p1 == NULL)  return p2;
+    else if(p2!= NULL) concat(p1, p2);
     return p1;
 }
 
@@ -181,7 +182,7 @@ pInterCodes translate_Stmt(Node* node) {
 }
 
 pInterCodes translate_DefList(Node* node) {
-    assert(node != NULL);
+    //assert(node != NULL);
     if(node == NULL) return NULL;
     assert(node->childSum == 2);    // DefList -> Def DefList
     pInterCodes p1 = translate_Def(node->children[0]);
@@ -205,6 +206,7 @@ pInterCodes translate_DecList(Node* node) {
     else {      // DecList -> Dec COMMA DecList
         pInterCodes p1 = translate_Dec(node->children[0]);
         pInterCodes p2 = translate_DecList(node->children[2]);
+        assert(p1 != NULL);
         if(p2 != NULL) concat(p1, p2);
         return p1;
     }
@@ -218,7 +220,7 @@ pInterCodes translate_Dec(Node* node) {
     }
     else { // Dec -> VarDec ASSIGNOP Exp
         assert(node->children[0]->childSum == 1);    // Exp 不会是 ARRAY，参考错误类型 5，VarDec 只能是 BASIC
-        int index = lookup(node->children[0]->text);    //fixed ,the last was node->children[0]->children[0]
+        int index = lookup(node->children[0]->children[0]->text);    //fixed ,the last was node->children[0]->children[0]
         assert(hashtable[index]->type->kind == BASIC);  // Exp 只能是 BASIC，参考错误类型 5，VarDec 只能是 BASIC
         pOperand p = new_pOperand();    // VarDec
         p->kind = VARIABLE;
@@ -311,8 +313,67 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             concat(code1, code3);
             return code1;
         }
+        else if(strcmp(node->children[1]->name, "MINUS") == 0){    // Exp -> Exp MINUS Exp
+            pOperand t1 = new_temp();
+            pOperand t2 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[0], t1);
+            pInterCodes code2 = translate_Exp(node->children[2], t2);
+            pInterCodes code3 = new_pInterCodes();
+            code3->code.kind = SUB;
+            code3->code.u.tripleOP.result = place;
+            code3->code.u.tripleOP.op1 = t1;
+            code3->code.u.tripleOP.op2 = t2;
+            concat(code1, code2);
+            concat(code1, code3);
+            return code1;
+        }
+        else if(strcmp(node->children[1]->name, "STAR") == 0){    // Exp -> Exp STAR Exp
+            pOperand t1 = new_temp();
+            pOperand t2 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[0], t1);
+            pInterCodes code2 = translate_Exp(node->children[2], t2);
+            pInterCodes code3 = new_pInterCodes();
+            code3->code.kind = CDMUL;
+            code3->code.u.tripleOP.result = place;
+            code3->code.u.tripleOP.op1 = t1;
+            code3->code.u.tripleOP.op2 = t2;
+            concat(code1, code2);
+            concat(code1, code3);
+            return code1;
+        }
+        else if(strcmp(node->children[1]->name, "DIV") == 0){    // Exp -> Exp DIV Exp
+            pOperand t1 = new_temp();
+            pOperand t2 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[0], t1);
+            pInterCodes code2 = translate_Exp(node->children[2], t2);
+            pInterCodes code3 = new_pInterCodes();
+            code3->code.kind = CDDIV;
+            code3->code.u.tripleOP.result = place;
+            code3->code.u.tripleOP.op1 = t1;
+            code3->code.u.tripleOP.op2 = t2;
+            concat(code1, code2);
+            concat(code1, code3);
+            return code1;
+        }
+        else if(strcmp(node->children[0]->name, "LP") == 0){    // Exp -> LP Exp RP
+            pInterCodes code = translate_Exp(node->children[1], place);
+            return code;
+        }
         else if(strcmp(node->children[1]->name, "LP") == 0){    // Exp -> ID LP RP
-            //TODO: FUNCTION
+            int i = lookup(node->children[0]->text);
+            pOperand p = new_pOperand();
+            p->kind = OPFUNCTION;
+            strcpy(p->u.name, hashtable[i]->name);
+            pInterCodes code = new_pInterCodes();
+            if(strcmp(p->u.name, "read") == 0){
+                code->code.kind = READ;
+                code->code.u.singleOP.op = place;
+                return code;
+            }
+            code->code.kind = CALL;
+            code->code.u.doubleOP.left = place;
+            code->code.u.doubleOP.right = p;
+            return code;
         }
         else if(strcmp(node->children[1]->name, "RELOP") == 0   // Exp -> Exp RELOP Exp
                 || strcmp(node->children[1]->name, "AND") == 0  // Exp -> Exp AND Exp
@@ -320,9 +381,51 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             pInterCodes code = Exp_to_Cond(node, place);
             return code;
         }
+        else if(strcmp(node->children[1]->name, "DOT") == 0){   // Exp -> Exp DOT ID
+
+        }
     }
     else if(node->childSum == 4){
-        //TODO
+        if(strcmp(node->children[1]->name, "LP") == 0){    // Exp -> ID LP Args RP
+            int i = lookup(node->children[0]->text);
+            pOperand p = new_pOperand();
+            p->kind = OPFUNCTION;
+            strcpy(p->u.name, hashtable[i]->name);
+            pArgList arg_list = NULL;
+            pInterCodes code1 = translate_Args(node->children[2], arg_list);
+            if(strcmp(p->u.name, "write") == 0){
+                pInterCodes code11 = new_pInterCodes();
+                code11->code.kind = WRITE;
+                code11->code.u.singleOP.op = arg_list->arg;
+                concat(code1, code11);
+                return code1;
+            }
+            pInterCodes code2 = new_pInterCodes();
+            code2->code.kind = ARG;
+            code2->code.u.singleOP.op = arg_list->arg;
+            arg_list = arg_list->next;
+            while(arg_list != NULL){
+                pInterCodes ptemp = new_pInterCodes();
+                ptemp->code.kind = ARG;
+                ptemp->code.u.singleOP.op = arg_list->arg;
+                arg_list = arg_list->next;
+                concat(code2, ptemp);
+            }
+            pInterCodes code21 = new_pInterCodes();
+            code21->code.kind = CALL;
+            code21->code.u.doubleOP.left = place;
+            code21->code.u.doubleOP.right = p;
+            concat(code1, code2);
+            concat(code1, code21);
+            return code1;
+        }
+        else if(strcmp(node->children[1]->name, "LB") == 0){    // Exp -> ID LB Exp RB
+            int i = lookup(node->children[0]->children[0]->text);
+            pOperand p = new_pOperand();
+            p->kind = VARIABLE;
+            strcpy(p->u.name, hashtable[i]->name);
+
+        }
     }
     return NULL;
 }
@@ -490,11 +593,14 @@ void ShowInterCode(pInterCodes p) {
         printf(" :");
     }
     else if(p->code.kind == ASSIGN) {
+        if(p->code.u.doubleOP.left == NULL) return;
         ShowOperand(p->code.u.doubleOP.left);
         printf(" := ");
+        assert(p->code.u.doubleOP.right!=NULL);
         ShowOperand(p->code.u.doubleOP.right);
     }
     else if(p->code.kind == ADD) {
+        if(p->code.u.tripleOP.result == NULL) return;
         ShowOperand(p->code.u.tripleOP.result);
         printf(" := ");
         ShowOperand(p->code.u.tripleOP.op1);
@@ -502,6 +608,7 @@ void ShowInterCode(pInterCodes p) {
         ShowOperand(p->code.u.tripleOP.op2);
     }
     else if(p->code.kind == SUB) {
+        if(p->code.u.tripleOP.result == NULL) return;
         ShowOperand(p->code.u.tripleOP.result);
         printf(" := ");
         ShowOperand(p->code.u.tripleOP.op1);
@@ -509,6 +616,7 @@ void ShowInterCode(pInterCodes p) {
         ShowOperand(p->code.u.tripleOP.op2);
     }
     else if(p->code.kind == CDMUL) {
+        if(p->code.u.tripleOP.result == NULL) return;
         ShowOperand(p->code.u.tripleOP.result);
         printf(" := ");
         ShowOperand(p->code.u.tripleOP.op1);
@@ -516,6 +624,7 @@ void ShowInterCode(pInterCodes p) {
         ShowOperand(p->code.u.tripleOP.op2);
     }
     else if(p->code.kind == CDDIV) {
+        if(p->code.u.tripleOP.result == NULL) return;
         ShowOperand(p->code.u.tripleOP.result);
         printf(" := ");
         ShowOperand(p->code.u.tripleOP.op1);
