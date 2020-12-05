@@ -549,7 +549,24 @@ pInterCodes translate_Cond(Node* node, pOperand label_true, pOperand label_false
     }
     return NULL;
 }
-
+int GetSize(pType pt, char* name){
+    if(pt->kind == BASIC){
+        return 4;
+    }
+    else if(pt->kind == ARRAY){
+        int each = GetSize(pt->u.array.elem, "");
+        return each * pt->u.array.size;
+    }
+    else if(pt->kind == STRUCTURE){
+        int ret = 0;
+        pFieldList pf = pt->u.structure->type->u.member;
+        while(pf != NULL && strcmp(pf->name, name) != 0){
+            ret += GetSize(pf->type, "");
+            pf = pf->tail;
+        }
+        return ret;
+    }
+}
 pOperand new_temp() {
     pOperand p = new_pOperand();
     p->kind = TEMP;
