@@ -723,7 +723,45 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             return code;
         }
         else if(strcmp(node->children[1]->name, "DOT") == 0){   // Exp -> Exp DOT ID
-
+            char name[32];
+            strcpy(name, getName(node->children[0]));
+            int i = lookup(name);
+            pOperand p = new_pOperand();
+            p->kind = VARIABLE;
+            strcpy(p->u.name, hashtable[i]->name);
+            pOperand offset = new_pOperand();
+            offset->kind = CONSTANT;
+            offset->u.val = GetSize(hashtable[i]->type, node->children[2]->text);
+            // pOperand t1 = new_temp();
+            // pInterCodes code1 = translate_Exp(node->children[2], t1); //偏移量计算
+            // pInterCodes code2 = new_pInterCodes();  //偏移量乘以单位size
+            // pOperand op1 = new_pOperand();
+            // op1->kind = CONSTANT;
+            // op1->u.val = GetSize(hashtable[i]->type->u.array.elem, "");
+            // pOperand offset = new_temp();
+            // code2->code.kind = CDMUL;
+            // code2->code.u.tripleOP.result = offset;
+            // code2->code.u.tripleOP.op1 = t1;
+            // code2->code.u.tripleOP.op2 = op1;
+            pOperand t2 = new_temp();
+            pInterCodes code1 = new_pInterCodes();  //t2 = &p
+            code1->code.kind = GET_ADDR;
+            code1->code.u.doubleOP.left = t2;
+            code1->code.u.doubleOP.right = p;
+            pOperand t3 = new_temp();
+            pInterCodes code4 = new_pInterCodes();  // t3 = t2 + offset
+            code4->code.kind = ADD;
+            code4->code.u.tripleOP.result = t3;
+            code4->code.u.tripleOP.op1 = t2;
+            code4->code.u.tripleOP.op2 = offset;
+            pInterCodes code5 = new_pInterCodes();  //place = t3
+            place->kind = ADDR;
+            code5->code.kind = ASSIGN;
+            code5->code.u.doubleOP.left = place;
+            code5->code.u.doubleOP.right = t3;
+            concat(code1, code4);
+            concat(code1, code5);
+            return code1;
         }
     }
     else if(node->childSum == 4){
@@ -748,6 +786,7 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
                 //     concat(code1, code12);
                 // }
                 // else{
+                    assert(arg_list->arg != NULL);
                 code11->code.kind = WRITE;
                 code11->code.u.singleOP.op = arg_list->arg;
                 concat(code1, code11);
@@ -862,8 +901,10 @@ pInterCodes translate_Args(Node* node, ppArgList arg_list) {
             pInterCodes code2 = new_pInterCodes();
             pOperand t2 = new_temp();
             code2->code.kind = GO_ADDR;
+            assert(t2 != NULL);
+            assert(t1 != NULL);
             code2->code.u.doubleOP.left = t2;
-            code2->code.u.doubleOP.left = t1;
+            code2->code.u.doubleOP.right = t1;
             concat(code1, code2);
             InsertArg(arg_list, t2);
         }
@@ -880,15 +921,18 @@ pInterCodes translate_Args(Node* node, ppArgList arg_list) {
             pOperand t2 = new_temp();
             code11->code.kind = GO_ADDR;
             code11->code.u.doubleOP.left = t2;
-            code11->code.u.doubleOP.left = t1;
+            code11->code.u.doubleOP.right = t1;
             concat(code1, code11);
             InsertArg(arg_list, t2);
+            pInterCodes code2 = translate_Args(node->children[2], arg_list);
+            concat(code1, code2);
         }
         else{
             InsertArg(arg_list, t1);
+            pInterCodes code2 = translate_Args(node->children[2], arg_list);
+            concat(code1, code2);
         }
-        pInterCodes code2 = translate_Args(node->children[2], arg_list);
-        concat(code1, code2);
+        
         return code1;
     }
 }
@@ -1235,6 +1279,7 @@ void concat(pInterCodes p1, pInterCodes p2) {
 void InsertArg(ppArgList arg_list, pOperand t) {
     if((*arg_list) == NULL) {
         (*arg_list) = (pArgList)calloc(1, sizeof(ArgList));
+        assert(t != NULL);
         (*arg_list)->arg = t;
         assert((*arg_list)->arg != NULL);
         (*arg_list)->next = NULL;      // 其实用 calloc 不需要这句
