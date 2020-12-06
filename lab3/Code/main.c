@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     yyparse();
     if(!ErrorNum && root)
     {
-        PreOrder(root, 0);    //We don't need to print parser tree in lab2
+        //PreOrder(root, 0);    //We don't need to print parser tree in lab2
         //printf("\n");
         // 语义分析
         initHashtable();
