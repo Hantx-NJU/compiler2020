@@ -1,64 +1,57 @@
+FUNCTION mod :
+PARAM x
+PARAM n
+t1 := x
+t5 := x
+t6 := n
+t3 := t5 / t6
+t4 := n
+t2 := t3 * t4
+t0 := t1 - t2
+RETURN t0
 FUNCTION main :
-t0 := #1
-tu1 := t0
-t1 := #1
-tu2 := t1
-READ t2
-m := t2
-t3 := m
-t4 := #1
-IF t3 < t4 GOTO label0
+READ t8
+year := t8
+t11 := year
+t12 := #400
+ARG t12
+ARG t11
+t9 := CALL mod
+t10 := #0
+IF t9 == t10 GOTO label0
 GOTO label1
 LABEL label0 :
-t5 := #0
-WRITE t5
+t14 := #1
+a := t14
 GOTO label2
 LABEL label1 :
-t6 := m
-t7 := #1
-IF t6 == t7 GOTO label3
-GOTO label6
+t17 := year
+t18 := #4
+ARG t18
+ARG t17
+t15 := CALL mod
+t16 := #0
+IF t15 == t16 GOTO label6
+GOTO label4
 LABEL label6 :
-t8 := m
-t9 := #2
-IF t8 == t9 GOTO label3
+t21 := year
+t22 := #100
+ARG t22
+ARG t21
+t19 := CALL mod
+t20 := #0
+IF t19 != t20 GOTO label3
 GOTO label4
 LABEL label3 :
-t10 := #1
-WRITE t10
+t24 := #1
+a := t24
 GOTO label5
 LABEL label4 :
-t11 := m
-t12 := #2
-IF t11 > t12 GOTO label7
-GOTO label8
-LABEL label7 :
-t13 := #3
-i := t13
-LABEL label9 :
-t14 := i
-t15 := m
-IF t14 <= t15 GOTO label10
-GOTO label11
-LABEL label10 :
-t17 := tu1
-t18 := tu2
-t16 := t17 + t18
-tu3 := t16
-t19 := tu2
-tu1 := t19
-t20 := tu3
-tu2 := t20
-t22 := i
-t23 := #1
-t21 := t22 + t23
-i := t21
-GOTO label9
-LABEL label11 :
-t24 := tu3
-WRITE t24
-LABEL label8 :
+t26 := #0
+a := t26
 LABEL label5 :
 LABEL label2 :
-t25 := #0
-RETURN t25
+t27 := a
+WRITE t27
+t28 := #0
+RETURN t28

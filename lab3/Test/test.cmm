@@ -10,6 +10,5 @@ int aa()
 int main()
 {
     int year,a;
-    year = read();
-    mod(year, 400);
+    int aaa[10];
 }
