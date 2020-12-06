@@ -315,6 +315,8 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             pOperand p = new_pOperand();
             p->kind = VARIABLE;
             strcpy(p->u.name, hashtable[i]->name);
+            place->kind = VARIABLE;
+            strcpy(place->u.name, hashtable[i]->name);
             pInterCodes code = new_pInterCodes();
             code->code.kind = ASSIGN;
             code->code.u.doubleOP.left = place;
@@ -395,6 +397,32 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             }
             else if(node->children[0]->childSum == 4 && strcmp(node->children[0]->children[1]->name, "LB") == 0)
             {   // Exp_1 -> Exp LB Exp RB
+                if(t1->kind != ADDR){
+                    code21 = translate_Exp(node->children[0], p);
+                    pInterCodes code22 = new_pInterCodes();
+                    code22->code.kind = STORE_ADDR;
+                    code22->code.u.doubleOP.left = p;
+                    code22->code.u.doubleOP.right = t1;
+                    concat(code21, code22);
+                }
+                else{
+                    code21->code.kind = GO_ADDR;
+                    pOperand t2 = new_temp();
+                    code21->code.u.doubleOP.left = t2;
+                    code21->code.u.doubleOP.right = t1;
+                    pInterCodes code22 = translate_Exp(node->children[0], p);
+                    pInterCodes code23 = new_pInterCodes();
+                    code23->code.kind = STORE_ADDR;
+                    code23->code.u.doubleOP.left = p;
+                    code23->code.u.doubleOP.right = t2;
+                    concat(code21, code22);
+                    concat(code21, code23);
+                }
+                assert(p != NULL);
+                assert(t1 != NULL);
+            }
+            else if(node->children[0]->childSum == 3 && strcmp(node->children[0]->children[1]->name, "DOT") == 0)
+            {   // Exp_1 -> Exp DOT ID
                 if(t1->kind != ADDR){
                     code21 = translate_Exp(node->children[0], p);
                     pInterCodes code22 = new_pInterCodes();
@@ -745,9 +773,16 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             // code2->code.u.tripleOP.op2 = op1;
             pOperand t2 = new_temp();
             pInterCodes code1 = new_pInterCodes();  //t2 = &p
-            code1->code.kind = GET_ADDR;
-            code1->code.u.doubleOP.left = t2;
-            code1->code.u.doubleOP.right = p;
+            if(isParam(hashtable[i]) == 0){
+                code1->code.kind = GET_ADDR;
+                code1->code.u.doubleOP.left = t2;
+                code1->code.u.doubleOP.right = p;
+            }
+            else{
+                code1->code.kind = GO_ADDR;
+                code1->code.u.doubleOP.left = t2;
+                code1->code.u.doubleOP.right = p;
+            }
             pOperand t3 = new_temp();
             pInterCodes code4 = new_pInterCodes();  // t3 = t2 + offset
             code4->code.kind = ADD;
@@ -774,23 +809,23 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             pInterCodes code1 = translate_Args(node->children[2], &arg_list);
             if(strcmp(p->u.name, "write") == 0){
                 pInterCodes code11 = new_pInterCodes();
-                // if(arg_list->arg->kind == ADDR){
-                //     pOperand t1 = new_temp();
-                //     code11->code.kind = GO_ADDR;
-                //     code11->code.u.doubleOP.left = t1;
-                //     code11->code.u.doubleOP.right = arg_list->arg;
-                //     pInterCodes code12 = new_pInterCodes();
-                //     code12->code.kind = WRITE;
-                //     code12->code.u.singleOP.op =t1;
-                //     concat(code1, code11);
-                //     concat(code1, code12);
-                // }
-                // else{
+                if(arg_list->arg->kind == ADDR){
+                    pOperand t1 = new_temp();
+                    code11->code.kind = GO_ADDR;
+                    code11->code.u.doubleOP.left = t1;
+                    code11->code.u.doubleOP.right = arg_list->arg;
+                    pInterCodes code12 = new_pInterCodes();
+                    code12->code.kind = WRITE;
+                    code12->code.u.singleOP.op =t1;
+                    concat(code1, code11);
+                    concat(code1, code12);
+                }
+                else{
                     assert(arg_list->arg != NULL);
-                code11->code.kind = WRITE;
-                code11->code.u.singleOP.op = arg_list->arg;
-                concat(code1, code11);
-                // }
+                    code11->code.kind = WRITE;
+                    code11->code.u.singleOP.op = arg_list->arg;
+                    concat(code1, code11);
+                }
                 return code1;
             }
             assert(arg_list->arg != NULL);
@@ -803,7 +838,6 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
                 pInterCodes ptemp = new_pInterCodes();
                 ptemp->code.kind = ARG;
                 ptemp->code.u.singleOP.op = arg_list->arg;
-                assert(ptemp->code.u.singleOP.op!=NULL);
                 arg_list = arg_list->next;
                 concat(code2, ptemp);
             }
@@ -822,6 +856,8 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             pOperand p = new_pOperand();
             p->kind = VARIABLE;
             strcpy(p->u.name, hashtable[i]->name);
+            place->kind = VARIABLE;
+            strcpy(place->u.name, hashtable[i]->name);
             pOperand t1 = new_temp();
             pInterCodes code1 = translate_Exp(node->children[2], t1); //偏移量计算
             pInterCodes code2 = new_pInterCodes();  //偏移量乘以单位size
@@ -896,42 +932,47 @@ pInterCodes translate_Args(Node* node, ppArgList arg_list) {
     if(node->childSum == 1) {   // Args -> Exp
         pOperand t1 = new_temp();
         pInterCodes code1 = translate_Exp(node->children[0], t1);
-        assert(t1!=NULL);
-        if(t1->kind == ADDR){
-            pInterCodes code2 = new_pInterCodes();
-            pOperand t2 = new_temp();
-            code2->code.kind = GO_ADDR;
-            assert(t2 != NULL);
-            assert(t1 != NULL);
-            code2->code.u.doubleOP.left = t2;
-            code2->code.u.doubleOP.right = t1;
-            concat(code1, code2);
-            InsertArg(arg_list, t2);
+        if(t1->kind == VARIABLE || t1->kind == STRUCTURE){
+            int i = lookup(t1->u.name);
+            if(i != -1) {
+                pFieldList pf = hashtable[i];
+                if(pf->type->kind == STRUCTURE){
+                    pInterCodes code11 = new_pInterCodes();
+                    pOperand t2 = new_temp();
+                    code11->code.kind = GET_ADDR;
+                    code11->code.u.doubleOP.left = t2;
+                    code11->code.u.doubleOP.right = t1;
+                    concat(code1, code11);
+                    InsertArg(arg_list, t2);
+                    return code1;
+                }
+            }
         }
-        else{
-            InsertArg(arg_list, t1);
-        }
+        InsertArg(arg_list, t1);
         return code1;
     }
     else {  // Args -> Exp COMMA Args
         pOperand t1 = new_temp();
         pInterCodes code1 = translate_Exp(node->children[0], t1);
-        if(t1->kind == ADDR){
-            pInterCodes code11 = new_pInterCodes();
-            pOperand t2 = new_temp();
-            code11->code.kind = GO_ADDR;
-            code11->code.u.doubleOP.left = t2;
-            code11->code.u.doubleOP.right = t1;
-            concat(code1, code11);
-            InsertArg(arg_list, t2);
-            pInterCodes code2 = translate_Args(node->children[2], arg_list);
-            concat(code1, code2);
+        if(t1->kind == VARIABLE || t1->kind == STRUCTURE){
+            int i = lookup(t1->u.name);
+            pFieldList pf = hashtable[i];
+            if(pf->type->kind == STRUCTURE){
+                pInterCodes code11 = new_pInterCodes();
+                pOperand t2 = new_temp();
+                code11->code.kind = GET_ADDR;
+                code11->code.u.doubleOP.left = t2;
+                code11->code.u.doubleOP.right = t1;
+                concat(code1, code11);
+                InsertArg(arg_list, t2);
+                pInterCodes code2 = translate_Args(node->children[2], arg_list);
+                concat(code1, code2);
+                return code1;
+            }
         }
-        else{
-            InsertArg(arg_list, t1);
-            pInterCodes code2 = translate_Args(node->children[2], arg_list);
-            concat(code1, code2);
-        }
+        InsertArg(arg_list, t1);
+        pInterCodes code2 = translate_Args(node->children[2], arg_list);
+        concat(code1, code2);
         
         return code1;
     }
@@ -1237,7 +1278,7 @@ void ShowInterCode(pInterCodes p) {
         ShowOperand(p->code.u.singleOP.op);
     }
     else if(p->code.kind == CALL) {
-        if(p->code.u.doubleOP.left == NULL) return;
+        if(p->code.u.doubleOP.left == NULL) printf("nullpstr");
         ShowOperand(p->code.u.doubleOP.left);
         printf(" := CALL ");
         ShowOperand(p->code.u.doubleOP.right);
@@ -1304,12 +1345,15 @@ int isParam(pFieldList pf){
 }
 
 char* getName(Node* node){
-    assert(node->childSum == 1 || node->childSum == 3);
+    assert(node->childSum == 1 || node->childSum == 3 || node->childSum == 4);
     if(node->childSum == 1){    //Exp -> ID
         return node->children[0]->text;
     }
-    else{   //Exp -> Exp DOT ID
+    else if(node->childSum == 3){   //Exp -> Exp DOT ID
         return node->children[2]->text;
+    }
+    else{   //Exp -> Exp LB Exp RB
+        return getName(node->children[0]);
     }
 }
 pInterCodes new_pInterCodes() {
