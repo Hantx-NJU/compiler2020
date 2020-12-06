@@ -26,9 +26,7 @@ void translate_ExtDef(Node* node) {
     assert(node != NULL);
     assert(node->childSum == 2 || node->childSum == 3);
     if(strcmp(node->children[1]->name, "ExtDecList") == 0) {    // ExtDef -> Specifier ExtDecList SEMI
-        // Do Nothing
-        // Specifier 中调用 StructSpecifier 虽然会遇到 Exp, 但在语义分析阶段将其定义为错误类型 15，故这里不再作处理，下同
-        // 其实只需要考虑由函数生成的中间代码就可以了
+        // translate_ExtDecList(node->children[1]);
     }
     else if(strcmp(node->children[1]->name, "SEMI") == 0) {     // ExtDef -> Specifier SEMI
         // Do Nothing
@@ -43,6 +41,18 @@ void translate_ExtDef(Node* node) {
     }
 }
 
+// void translate_ExtDecList(Node* node){
+//     assert(node != NULL);
+//     assert(node->childSum == 1 || node->childSum == 3);
+//     if(node->childSum == 1){    // ExtDecList -> VarDec
+//         translate_VarDec(node->children[0]);
+//     }
+//     else{   // ExtDecList -> VarDec COMMA ExtDecList
+//         translate_VarDec(node->children[0]);
+//         translate_ExtDecList(node->children[2]);
+//     }
+// }
+
 pInterCodes translate_FunDec(Node* node) {
     assert(node != NULL);
     assert(node->childSum == 3 || node->childSum == 4);
@@ -55,6 +65,7 @@ pInterCodes translate_FunDec(Node* node) {
     strcpy(p->code.u.singleOP.op->u.name, hashtable[index]->name);
     if(node->childSum == 4) {       // FunDec -> ID LP VarList RP
         pFieldList iter = hashtable[index]->type->u.function.argv;
+        FuncParam = iter;
         while(iter != NULL) {
             pInterCodes np = new_pInterCodes();
             np->code.kind = PARAM;
@@ -139,16 +150,20 @@ pInterCodes translate_Stmt(Node* node) {
             pInterCodes code0 = new_pInterCodes();
             pInterCodes code11 = new_pInterCodes();
             pInterCodes code21 = new_pInterCodes();
+            pInterCodes code22 = new_pInterCodes();
             code0->code.kind = LABEL;
             code0->code.u.singleOP.op = label1;
             code11->code.kind = LABEL;
             code11->code.u.singleOP.op = label2;
-            code21->code.kind = LABEL;
-            code21->code.u.singleOP.op = label3;
+            code21->code.kind = GOTO;
+            code21->code.u.singleOP.op = label1;
+            code22->code.kind = LABEL;
+            code22->code.u.singleOP.op = label3;
             concat(code0, code1);
             concat(code0, code11);
             concat(code0, code2);
             concat(code0, code21);
+            concat(code0, code22);
             return code0;
         }
     }
@@ -206,7 +221,6 @@ pInterCodes translate_DecList(Node* node) {
     else {      // DecList -> Dec COMMA DecList
         pInterCodes p1 = translate_Dec(node->children[0]);
         pInterCodes p2 = translate_DecList(node->children[2]);
-        assert(p1 != NULL);
         if(p2 != NULL) concat(p1, p2);
         return p1;
     }
@@ -216,6 +230,23 @@ pInterCodes translate_Dec(Node* node) {
     assert(node != NULL);
     assert(node->childSum == 1 || node->childSum == 3);
     if(node->childSum == 1) { // Dec -> VarDec
+        if(node->childSum == 1){    // Dec -> VarDec -> ID
+            int index = lookup(node->children[0]->children[0]->text);
+            pFieldList pf = hashtable[index];
+            if(pf->type->kind == ARRAY || pf->type->kind == STRUCTURE){
+                pInterCodes code = new_pInterCodes();
+                pOperand op = new_pOperand();
+                if(pf->type->kind == ARRAY)
+                    op->kind = VARIABLE;
+                else
+                    op->kind = OPSTRUCTURE;
+                strcpy(op->u.name, pf->name);
+                code->code.kind = DEC;
+                code->code.u.decOP.op = op;
+                code->code.u.decOP.size = GetSize(pf->type, "");
+                return code;
+            }
+        }
         return NULL;
     }
     else { // Dec -> VarDec ASSIGNOP Exp
@@ -370,6 +401,7 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
                 code->code.u.singleOP.op = place;
                 return code;
             }
+            assert(p!=NULL);
             code->code.kind = CALL;
             code->code.u.doubleOP.left = place;
             code->code.u.doubleOP.right = p;
@@ -392,7 +424,7 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             p->kind = OPFUNCTION;
             strcpy(p->u.name, hashtable[i]->name);
             pArgList arg_list = NULL;
-            pInterCodes code1 = translate_Args(node->children[2], arg_list);
+            pInterCodes code1 = translate_Args(node->children[2], &arg_list);
             if(strcmp(p->u.name, "write") == 0){
                 pInterCodes code11 = new_pInterCodes();
                 code11->code.kind = WRITE;
@@ -400,14 +432,17 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
                 concat(code1, code11);
                 return code1;
             }
+            assert(arg_list->arg != NULL);
             pInterCodes code2 = new_pInterCodes();
             code2->code.kind = ARG;
             code2->code.u.singleOP.op = arg_list->arg;
+            assert(code2->code.u.singleOP.op!=NULL);
             arg_list = arg_list->next;
             while(arg_list != NULL){
                 pInterCodes ptemp = new_pInterCodes();
                 ptemp->code.kind = ARG;
                 ptemp->code.u.singleOP.op = arg_list->arg;
+                assert(ptemp->code.u.singleOP.op!=NULL);
                 arg_list = arg_list->next;
                 concat(code2, ptemp);
             }
@@ -419,12 +454,32 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             concat(code1, code21);
             return code1;
         }
-        else if(strcmp(node->children[1]->name, "LB") == 0){    // Exp -> ID LB Exp RB
-            int i = lookup(node->children[0]->children[0]->text);
+        else if(strcmp(node->children[1]->name, "LB") == 0){    // Exp -> Exp LB Exp RB
+            char name[32];
+            strcpy(name, getName(node->children[0]));
+            int i = lookup(name);
             pOperand p = new_pOperand();
             p->kind = VARIABLE;
             strcpy(p->u.name, hashtable[i]->name);
-
+            pOperand t1 = new_temp();
+            pInterCodes code1 = translate_Exp(node->children[2], t1); //偏移量计算
+            pInterCodes code2 = new_pInterCodes();
+            pOperand op1 = new_pOperand();
+            op1->kind = CONSTANT;
+            op1->u.val = GetSize(hashtable[i]->type->u.array.elem, "");
+            pOperand offset = new_temp();
+            code2->code.kind = CDMUL;
+            code2->code.u.tripleOP.result = offset;
+            code2->code.u.tripleOP.op1 = t1;
+            code2->code.u.tripleOP.op2 = op1;
+            pOperand t2 = new_temp();
+            pInterCodes code3 = new_pInterCodes();
+            code3->code.kind = GET_ADDR;
+            code3->code.u.doubleOP.left = t2;
+            code3->code.u.doubleOP.right = p;
+            pInterCodes code4 = new_pInterCodes();
+            code4->code.kind = ADD;
+            //code4->code.u.tripleOP.result
         }
     }
     return NULL;
@@ -461,12 +516,13 @@ pInterCodes Exp_to_Cond(Node* node, pOperand place){
     concat(code0, code3);
     return code0;
 }
-pInterCodes translate_Args(Node* node, pArgList arg_list) {
+pInterCodes translate_Args(Node* node, ppArgList arg_list) {
     assert(node != NULL);
     assert(node->childSum == 1 || node->childSum == 3);
     if(node->childSum == 1) {   // Args -> Exp
         pOperand t1 = new_temp();
         pInterCodes code1 = translate_Exp(node->children[0], t1);
+        assert(t1!=NULL);
         InsertArg(arg_list, t1);
         return code1;
     }
@@ -690,6 +746,7 @@ void ShowInterCode(pInterCodes p) {
         ShowOperand(p->code.u.singleOP.op);
     }
     else if(p->code.kind == CALL) {
+        if(p->code.u.doubleOP.left == NULL) return;
         ShowOperand(p->code.u.doubleOP.left);
         printf(" := CALL ");
         ShowOperand(p->code.u.doubleOP.right);
@@ -728,19 +785,40 @@ void concat(pInterCodes p1, pInterCodes p2) {
     p1->prev = tmp;
 }
 
-void InsertArg(pArgList arg_list, pOperand t) {
-    if(arg_list == NULL) {
-        arg_list = (pArgList)calloc(1, sizeof(ArgList));
-        arg_list->arg = t;
-        arg_list->next = NULL;      // 其实用 calloc 不需要这句
+void InsertArg(ppArgList arg_list, pOperand t) {
+    if((*arg_list) == NULL) {
+        (*arg_list) = (pArgList)calloc(1, sizeof(ArgList));
+        (*arg_list)->arg = t;
+        assert((*arg_list)->arg != NULL);
+        (*arg_list)->next = NULL;      // 其实用 calloc 不需要这句
     }
     else{
         pArgList p = (pArgList)calloc(1, sizeof(ArgList));
-        p->next = arg_list;
-        arg_list =p;
+        p->next = (*arg_list);
+        (*arg_list) =p;
     }
 }
 
+int isParam(pFieldList pf){
+    pFieldList p = FuncParam;
+    while(p != NULL){
+        if(p->name == pf->name){
+            return GetSize(p->type, "");
+        }
+        p = p->tail;
+    }
+    return 0;
+}
+
+char* getName(Node* node){
+    assert(node->childSum == 1 || node->childSum == 3);
+    if(node->childSum == 1){    //Exp -> ID
+        return node->children[0]->text;
+    }
+    else{   //Exp -> Exp DOT ID
+        return node->children[2]->text;
+    }
+}
 pInterCodes new_pInterCodes() {
     pInterCodes p = (pInterCodes)calloc(1, sizeof(InterCodes));
     p->next = p;

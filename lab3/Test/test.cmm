@@ -1,8 +1,15 @@
+int mod(int x,int n)
+{
+    return x - (x / n) * n;
+}
+
+int aa()
+{
+
+}
 int main()
 {
-    int a = 3, b = 8, c = 24;
-    int final;
-    b = (a * a + c / b)  * 4;
-    write(b);
-    
+    int year,a;
+    year = read();
+    mod(year, 400);
 }

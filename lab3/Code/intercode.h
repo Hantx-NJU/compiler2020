@@ -5,6 +5,7 @@
 # include <string.h>
 # include <stdlib.h>
 # include <assert.h>
+# include "semantic.h" 
 # include "tree.h"
 
 typedef struct Operand* pOperand;
@@ -60,10 +61,21 @@ pInterCodes intercodeslist;
 
 // ArgList (单向链表)
 typedef struct ArgList* pArgList;
+typedef pArgList* ppArgList;
 typedef struct ArgList {
     pOperand arg;
     pArgList next;
 } ArgList;
+
+// // 函数传参列表
+// typedef struct ArgTemp* pArgTemp;
+// typedef struct ArgTemp{
+//     char name[32];
+//     pArgTemp next;
+// } ArgTemp;
+
+// pArgTemp ArgTempList;
+pFieldList FuncParam;
 
 // 遍历语法树，完成翻译
 void translate(Node* root);
@@ -72,6 +84,8 @@ void translate(Node* root);
 void translate_Program(Node* node);
 void translate_ExtDefList(Node* node);
 void translate_ExtDef(Node* node);          // 所有中间代码以函数自然分块，故在 ExtDef 中就可以链接到 intercodeslist 里面了
+// void translate_ExtDecList(Node* node);
+// void translate_VarDec(Node* node);
 pInterCodes translate_FunDec(Node* node);   // 传回的 pInterCodes 指向第一行中间代码(没有假头节点)，注意和 intercodeslist 区分(有)
 pInterCodes translate_CompSt(Node* node);
 pInterCodes translate_StmtList(Node* node);
@@ -81,7 +95,7 @@ pInterCodes translate_Def(Node* node);
 pInterCodes translate_DecList(Node* node);
 pInterCodes translate_Dec(Node* node);
 pInterCodes translate_Exp(Node* node, pOperand place);
-pInterCodes translate_Args(Node* node, pArgList arg_list);
+pInterCodes translate_Args(Node* node, ppArgList arg_list);
 
 pInterCodes translate_Cond(Node* node, pOperand label_true, pOperand label_false);
 
@@ -98,8 +112,11 @@ void ShowAllInterCodes();   // 显示全部
 void ShowInterCode(pInterCodes p);  // 显示某行代码
 void ShowOperand(pOperand p); // 显示某个操作数
 void concat(pInterCodes p1, pInterCodes p2); // 将 p2 连接到 p1 后面
-void InsertArg(pArgList arg_list, pOperand t); // arg_list = t1 + arg_list（注意顺序）
+void InsertArg(ppArgList arg_list, pOperand t); // arg_list = t1 + arg_list（注意顺序）
 pInterCodes new_pInterCodes();      // 分配内存并清0
 pOperand new_pOperand(); 
+int GetSize(pType pt, char* name);
+int isParam(pFieldList pf);
+char* getName(Node* node);
 
 #endif
