@@ -10,7 +10,7 @@
 
 typedef struct Operand* pOperand;
 typedef struct Operand{
-    enum {VARIABLE, CONSTANT, TEMP, ADDRESS, OPLABEL, OPFUNCTION, OPSTRUCTURE} kind;
+    enum {VARIABLE, CONSTANT, TEMP, ADDR, OPLABEL, OPFUNCTION, OPSTRUCTURE} kind;
     union{
         int no;          // TEMP, OPLABEL
         int val;         // CONSTANT

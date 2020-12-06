@@ -545,7 +545,7 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             code4->code.u.tripleOP.op1 = t2;
             code4->code.u.tripleOP.op2 = offset;
             pInterCodes code5 = new_pInterCodes();  //place = t3
-            place->kind = ADDR
+            place->kind = ADDR;
             code5->code.kind = ASSIGN;
             code5->code.u.doubleOP.left = place;
             code5->code.u.doubleOP.right = t3;
