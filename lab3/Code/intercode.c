@@ -202,7 +202,11 @@ pInterCodes translate_DefList(Node* node) {
     assert(node->childSum == 2);    // DefList -> Def DefList
     pInterCodes p1 = translate_Def(node->children[0]);
     pInterCodes p2 = translate_DefList(node->children[1]);
-    if(p2 != NULL) concat(p1, p2);
+    if(p2 != NULL) {
+        if(p1 == NULL)
+            return p2;
+        concat(p1, p2);
+    }
     return p1;
 }
 
@@ -221,7 +225,11 @@ pInterCodes translate_DecList(Node* node) {
     else {      // DecList -> Dec COMMA DecList
         pInterCodes p1 = translate_Dec(node->children[0]);
         pInterCodes p2 = translate_DecList(node->children[2]);
-        if(p2 != NULL) concat(p1, p2);
+        if(p2 != NULL) {
+            if(p1 == NULL)
+                return p2;
+            concat(p1, p2);
+        }
         return p1;
     }
 }
@@ -230,24 +238,8 @@ pInterCodes translate_Dec(Node* node) {
     assert(node != NULL);
     assert(node->childSum == 1 || node->childSum == 3);
     if(node->childSum == 1) { // Dec -> VarDec
-        if(node->childSum == 1){    // Dec -> VarDec -> ID
-            int index = lookup(node->children[0]->children[0]->text);
-            pFieldList pf = hashtable[index];
-            if(pf->type->kind == ARRAY || pf->type->kind == STRUCTURE){
-                pInterCodes code = new_pInterCodes();
-                pOperand op = new_pOperand();
-                if(pf->type->kind == ARRAY)
-                    op->kind = VARIABLE;
-                else
-                    op->kind = OPSTRUCTURE;
-                strcpy(op->u.name, pf->name);
-                code->code.kind = DEC;
-                code->code.u.decOP.op = op;
-                code->code.u.decOP.size = GetSize(pf->type, "");
-                return code;
-            }
-        }
-        return NULL;
+        pInterCodes code = translate_VarDec(node->children[0]);
+        return code;
     }
     else { // Dec -> VarDec ASSIGNOP Exp
         assert(node->children[0]->childSum == 1);    // Exp 不会是 ARRAY，参考错误类型 5，VarDec 只能是 BASIC
@@ -256,10 +248,38 @@ pInterCodes translate_Dec(Node* node) {
         pOperand p = new_pOperand();    // VarDec
         p->kind = VARIABLE;
         strcpy(p->u.name, hashtable[index]->name);
-        return translate_Exp(node->children[2], p);
+        pInterCodes code =  translate_Exp(node->children[2], p);
+        assert(code != NULL);
+        return code;
     }
 }
 
+pInterCodes translate_VarDec(Node* node){
+    if(node->childSum == 1){    // VarDec -> ID
+        int index = lookup(node->children[0]->text);
+        pFieldList pf = hashtable[index];
+        if(pf->type->kind == ARRAY || pf->type->kind == STRUCTURE){
+            pInterCodes code = new_pInterCodes();
+            pOperand op = new_pOperand();
+            if(pf->type->kind == ARRAY)
+                op->kind = VARIABLE;
+            else
+                op->kind = OPSTRUCTURE;
+            strcpy(op->u.name, pf->name);
+            code->code.kind = DEC;
+            code->code.u.decOP.op = op;
+            code->code.u.decOP.size = GetSize(pf->type, "");
+            assert(code != NULL);
+            return code;
+        }
+    }
+    else if(node->childSum == 4){   // VarDec -> VarDec LB INT RB
+        pInterCodes code = translate_VarDec(node->children[0]);
+        assert(code != NULL);
+        return code;
+    }
+    return NULL;
+}
 pInterCodes translate_Exp(Node* node, pOperand place) {
     // TODO
     assert(node != NULL);
@@ -327,10 +347,12 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
             }
             else if(node->children[0]->childSum == 4 && strcmp(node->children[0]->children[1]->name, "LB") == 0)
             {   // Exp_1 -> Exp LB Exp RB
-                translate_Exp(node->children[0], p);
-                code21->code.kind = STORE_ADDR;
-                code21->code.u.doubleOP.left = p;
-                code21->code.u.doubleOP.right = t1;
+                code21 = translate_Exp(node->children[0], p);
+                pInterCodes code22 = new_pInterCodes();
+                code22->code.kind = STORE_ADDR;
+                code22->code.u.doubleOP.left = p;
+                code22->code.u.doubleOP.right = t1;
+                concat(code21, code22);
                 assert(p != NULL);
                 assert(t1 != NULL);
             }
@@ -343,6 +365,23 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
                 code21->code.u.doubleOP.right = t1;
                 assert(p != NULL);
                 assert(t1 != NULL);
+            }
+            else if(node->children[2]->childSum == 4 && strcmp(node->children[2]->children[1]->name, "LB") == 0
+                && node->children[0]->childSum == 4 && strcmp(node->children[0]->children[1]->name, "LB") == 0)
+            {   // Exp_1 -> Exp LB Exp RB && Exp_2 -> Exp LB Exp RB
+                p->kind = VARIABLE;
+                strcpy(p->u.name, hashtable[i]->name);
+                code21->code.kind = GO_ADDR;
+                code21->code.u.doubleOP.left = p;
+                code21->code.u.doubleOP.right = t1;
+                pOperand p1 = new_temp();
+                pInterCodes code22 = translate_Exp(node->children[0], p1);
+                pInterCodes code23 = new_pInterCodes();
+                code23->code.kind = STORE_ADDR;
+                code23->code.u.doubleOP.left = p1;
+                code23->code.u.doubleOP.right = p;
+                concat(code21, code22);
+                concat(code21, code23);
             }
             pInterCodes code22 = new_pInterCodes();
             code22->code.kind = ASSIGN;
@@ -478,7 +517,6 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
         }
         else if(strcmp(node->children[1]->name, "LB") == 0){    // Exp -> Exp LB Exp RB
             char name[32];
-            assert(0);
             strcpy(name, getName(node->children[0]));
             int i = lookup(name);
             pOperand p = new_pOperand();

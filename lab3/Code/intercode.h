@@ -10,7 +10,7 @@
 
 typedef struct Operand* pOperand;
 typedef struct Operand{
-    enum {VARIABLE, CONSTANT, TEMP, OPLABEL, OPFUNCTION, OPSTRUCTURE} kind;
+    enum {VARIABLE, CONSTANT, TEMP, ADDR, OPLABEL, OPFUNCTION, OPSTRUCTURE} kind;
     union{
         int no;          // TEMP, OPLABEL
         int val;         // CONSTANT
@@ -94,6 +94,7 @@ pInterCodes translate_DefList(Node* node);
 pInterCodes translate_Def(Node* node);
 pInterCodes translate_DecList(Node* node);
 pInterCodes translate_Dec(Node* node);
+pInterCodes translate_VarDec(Node* node);
 pInterCodes translate_Exp(Node* node, pOperand place);
 pInterCodes translate_Args(Node* node, ppArgList arg_list);
 
