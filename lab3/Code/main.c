@@ -4,6 +4,7 @@
 # include "intercode.h"
 
 extern FILE* yyin;
+extern FILE* fout;
 extern int yylineno;
 extern Node* root;
 extern int yylex (void);
@@ -39,6 +40,11 @@ int main(int argc, char** argv) {
         perror(argv[1]);
         return 1;
     }
+    fout = fopen(argv[2],"w");
+    if(!fout) {
+        perror(argv[2]);
+        return 1;
+    }
     yyrestart(f);
     yyparse();
     if(!ErrorNum && root)
@@ -50,6 +56,7 @@ int main(int argc, char** argv) {
         traverseTree(root);
         // 中间代码生成
         translate(root);
+        fclose(fout);
     }
     return 0;
 }

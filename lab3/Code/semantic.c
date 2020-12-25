@@ -87,10 +87,8 @@ int lookup(char* name) { // 返回下标， 不在表中返回 -1
 
 int isEqual(pType a, pType b){
     // equal is 0, otherwise is 1
-    if(a->kind != b->kind && b->kind != FUNCTION)
+    if(a->kind != b->kind)
         return 1;
-    if(b->kind == FUNCTION)
-        return isEqual(a, b->u.function.ret);
     pFieldList apf, bpf;
     switch(a->kind){
         case BASIC: 
@@ -461,7 +459,7 @@ pType Exp(Node* node) {
                 if(hashtable[i]->type->kind != FUNCTION)
                     printf("Error type 11 at Line %d: \"%s\" is not a function\n", node->children[0]->lineno, node->children[0]->text);
                 else 
-                    pt = hashtable[i]->type;
+                    pt = hashtable[i]->type->u.function.ret;
             }
         }
         else if(strcmp(node->children[2]->name, "ID") == 0){    //Exp -> Exp DOT ID
@@ -592,12 +590,15 @@ void showtype(pType pt) {
     else if(pt->kind == ARRAY) { // ARRAY
         printf("[%d] ", pt->u.array.size);
         pType tmp = pt->u.array.elem;
-        while(tmp->kind != BASIC) {
+        while(tmp->kind != BASIC && tmp->kind != STRUCTURE) {
             printf("[%d] ", tmp->u.array.size);
             tmp = tmp->u.array.elem;
         }
-        if(tmp->u.basic == BASIC_INT) printf("int");
-        else if(tmp->u.basic == BASIC_FLOAT) printf("float");
+        if(tmp->kind == BASIC){
+            if(tmp->u.basic == BASIC_INT) printf("int");
+            else if(tmp->u.basic == BASIC_FLOAT) printf("float");
+        }
+        else if(tmp->kind == STRUCTURE) printf("%s",tmp->u.structure->name);      
     }
     else if(pt->kind == STRUCTURE) { // STRUCTURE
         printf("structure\t\t");
@@ -628,6 +629,53 @@ void showtype(pType pt) {
             printf("%s(%d) ", tmp->name, lookup(tmp->name));
             tmp = tmp->tail;
         }
+    }
+    else assert(0);
+}
+
+int isArg(pFieldList pf) {
+    for(int i = 0; i < HASHTABLE_SIZE; ++i) {
+        if(hashtable[i] != NULL){
+            if(hashtable[i]->type->kind == FUNCTION) {
+                pFieldList iter = hashtable[i]->type->u.function.argv;
+                while(iter != NULL) {
+                    if(strcmp(iter->name,pf->name) == 0) return 1; 
+                    iter = iter->tail;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int getoffset(pFieldList pf) {
+    for(int i = 0; i < HASHTABLE_SIZE; ++i) {
+        if(hashtable[i] != NULL){
+            if(hashtable[i]->type->kind == STRUCT_TAG) {
+                int offset = 0;
+                pFieldList iter = hashtable[i]->type->u.member;
+                while(iter != NULL) {
+                    if(strcmp(iter->name,pf->name) == 0) return offset;
+                    offset += getSize(iter->type);
+                    iter = iter->tail;
+                }
+            }
+        }
+    }
+    return 0; 
+}
+
+int getSize(pType pt) {
+    if(pt->kind == BASIC) return 4;
+    else if(pt->kind == ARRAY) return pt->u.array.size * getSize(pt->u.array.elem);
+    else if(pt->kind == STRUCTURE) {
+        int size = 0;
+        pFieldList iter = pt->u.structure->type->u.member;
+        while(iter != NULL) {
+            size += getSize(iter->type);
+            iter = iter->tail;
+        }
+        return size;
     }
     else assert(0);
 }

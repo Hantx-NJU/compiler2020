@@ -36,7 +36,7 @@ int main()
             company[i].workers[j].salary = 3000 + i * 100 + j * 150;
             j = j + 1;
         }
-	company[i].avg_salary = calculate_avg(company[i]);
+	    company[i].avg_salary = calculate_avg(company[i]);
         avg = avg + company[i].avg_salary;
         i = i + 1;
     }

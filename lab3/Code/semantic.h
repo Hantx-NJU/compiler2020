@@ -79,6 +79,9 @@ pFieldList Args(Node* node);
 
 // 其他辅助函数
 int isEqual(pType a, pType b);  // 判断两个类型是否相等
+int isArg(pFieldList pf);       // pf 是某个函数的参数吗
+int getoffset(pFieldList pf);  // 计算成员在结构体中的偏移
+int getSize(pType pt);
 
 // DEBUG 函数
 void show();    // 展示hashtable中的所有项
