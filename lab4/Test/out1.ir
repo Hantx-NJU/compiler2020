@@ -1,0 +1,85 @@
+FUNCTION main :
+DEC books 96
+i := #0
+j := #0
+sum := #0
+LABEL label0 :
+i := i
+t1 := #8
+IF i < t1 GOTO label1
+GOTO label2
+LABEL label1 :
+i := i
+t4 := &books
+t5 := t4 + #96
+t2 := t5
+*t2 := i
+t8 := #2012
+i := i
+t7 := t8 + i
+t10 := &books
+t11 := t10 + #96
+t6 := t11
+*t6 := t7
+t14 := #30
+i := i
+t17 := #2
+t15 := i * t17
+t13 := t14 + t15
+t18 := &books
+t19 := t18 + #96
+t12 := t19
+*t12 := t13
+i := i
+t23 := #1
+t21 := i + t23
+i := t21
+GOTO label0
+LABEL label2 :
+LABEL label3 :
+j := j
+t25 := #8
+IF j < t25 GOTO label4
+GOTO label5
+LABEL label4 :
+t28 := &books
+t29 := t28 + #96
+t26 := t29
+t27 := #4
+t30 := *t26
+IF t30 < t27 GOTO label6
+GOTO label7
+LABEL label6 :
+t32 := #1
+r := t32
+GOTO label8
+LABEL label7 :
+t34 := #2
+r := t34
+LABEL label8 :
+sum := sum
+t43 := &books
+t44 := t43 + #96
+t41 := t44
+r := r
+t45 := *t41
+t39 := t45 * r
+t46 := #2020
+t48 := &books
+t49 := t48 + #96
+t47 := t49
+t50 := *t47
+t40 := t46 - t50
+t38 := t39 * t40
+t36 := sum + t38
+sum := t36
+j := j
+t54 := #1
+t52 := j + t54
+j := t52
+GOTO label3
+LABEL label5 :
+sum := sum
+WRITE sum
+t56 := #0
+RETURN t56
