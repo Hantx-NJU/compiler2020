@@ -1,0 +1,89 @@
+FUNCTION main :
+i := #0
+DEC a 20
+LABEL label0 :
+IF i < #5 GOTO label1
+GOTO label2
+LABEL label1 :
+a_addr := &a
+t8 := i * #4
+t9 := a_addr + t8
+READ t5
+*t9 := t5
+t3 := t9
+t12 := i + #1
+i := t12
+t10 := i
+GOTO label0
+LABEL label2 :
+i := #0
+t15 := i
+LABEL label3 :
+IF i < #4 GOTO label4
+GOTO label5
+LABEL label4 :
+t22 := i + #1
+j := t22
+t20 := j
+LABEL label6 :
+IF j < #5 GOTO label7
+GOTO label8
+LABEL label7 :
+a_addr := &a
+t31 := i * #4
+t32 := a_addr + t31
+t33 := *t32
+a_addr := &a
+t36 := j * #4
+t37 := a_addr + t36
+t38 := *t37
+IF t33 > t38 GOTO label9
+GOTO label10
+LABEL label9 :
+a_addr := &a
+t44 := i * #4
+t45 := a_addr + t44
+t := *t45
+t39 := t
+a_addr := &a
+t51 := i * #4
+t52 := a_addr + t51
+a_addr := &a
+t55 := j * #4
+t56 := a_addr + t55
+t57 := *t56
+*t52 := t57
+t46 := t52
+a_addr := &a
+t63 := j * #4
+t64 := a_addr + t63
+*t64 := t
+t58 := t64
+LABEL label10 :
+t67 := j + #1
+j := t67
+t65 := j
+GOTO label6
+LABEL label8 :
+t72 := i + #1
+i := t72
+t70 := i
+GOTO label3
+LABEL label5 :
+i := #0
+t75 := i
+LABEL label11 :
+IF i < #5 GOTO label12
+GOTO label13
+LABEL label12 :
+a_addr := &a
+t84 := i * #4
+t85 := a_addr + t84
+t86 := *t85
+WRITE t86
+t89 := i + #1
+i := t89
+t87 := i
+GOTO label11
+LABEL label13 :
+RETURN #0

@@ -2,11 +2,13 @@
 # include "tree.h"
 # include "semantic.h"
 # include "intercode.h"
+# include "objectcode.h" 
 
 extern FILE* yyin;
 extern FILE* fout;
 extern int yylineno;
 extern Node* root;
+extern pInterCodes intercodeslist;
 extern int yylex (void);
 extern void yyrestart ( FILE *input_file  );
 extern int yyparse();
@@ -56,6 +58,8 @@ int main(int argc, char** argv) {
         traverseTree(root);
         // 中间代码生成
         translate(root);
+        // objective code 
+        compiler(intercodeslist);
         fclose(fout);
     }
     return 0;

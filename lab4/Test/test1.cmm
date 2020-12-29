@@ -1,0 +1,7 @@
+int f(int a, int b, int c, int d, int e){
+}
+
+int main(){
+int aa, bb, cc, dd, ee;
+f(aa,bb,cc,dd,ee);
+}

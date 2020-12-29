@@ -1,95 +1,24 @@
-FUNCTION calculate_avg :
-PARAM g
-sum := #0
-k := #0
+FUNCTION main :
+a := #0
+b := #1
+i := #0
+READ t5
+n := t5
+t3 := n
 LABEL label0 :
-IF k < #10 GOTO label1
+IF i < n GOTO label1
 GOTO label2
 LABEL label1 :
-t10 := g + #4
-t13 := k * #12
-t14 := t10 + t13
-t8 := t14 + #4
-t15 := *t8
-t6 := sum + t15
-sum := t6
-t4 := sum
-t18 := k + #1
-k := t18
-t16 := k
+t8 := a + b
+c := t8
+WRITE b
+a := b
+t13 := a
+b := c
+t16 := b
+t21 := i + #1
+i := t21
+t19 := i
 GOTO label0
 LABEL label2 :
-t22 := g + #124
-t23 := sum / #10
-*t22 := t23
-t21 := t22
-t27 := g + #124
-t29 := *t27
-RETURN t29
-FUNCTION main :
-DEC company 640
-i := #0
-avg := #0
-LABEL label3 :
-IF i < #5 GOTO label4
-GOTO label5
-LABEL label4 :
-j := #0
-t34 := j
-company_addr := &company
-t43 := i * #128
-t44 := company_addr + t43
-t38 := t44 + #0
-*t38 := i
-t37 := t38
-LABEL label6 :
-IF j < #10 GOTO label7
-GOTO label8
-LABEL label7 :
-company_addr := &company
-t55 := i * #128
-t56 := company_addr + t55
-t51 := t56 + #4
-t58 := j * #12
-t59 := t51 + t58
-t48 := t59 + #4
-t63 := i * #100
-t60 := #3000 + t63
-t61 := j * #150
-t49 := t60 + t61
-*t48 := t49
-t47 := t48
-t70 := j + #1
-j := t70
-t68 := j
-GOTO label6
-LABEL label8 :
-company_addr := &company
-t79 := i * #128
-t80 := company_addr + t79
-t74 := t80 + #124
-company_addr := &company
-t84 := i * #128
-t85 := company_addr + t84
-ARG t85
-t75 := CALL calculate_avg
-*t74 := t75
-t73 := t74
-company_addr := &company
-t94 := i * #128
-t95 := company_addr + t94
-t90 := t95 + #124
-t96 := *t90
-t88 := avg + t96
-avg := t88
-t86 := avg
-t99 := i + #1
-i := t99
-t97 := i
-GOTO label3
-LABEL label5 :
-t104 := avg / #5
-avg := t104
-t102 := avg
-WRITE avg
 RETURN #0
