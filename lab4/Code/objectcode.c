@@ -26,13 +26,16 @@ void initregs() {
 }
 
 void initframe() {
-    // TODO 
+    // DONE 
     // 重置 vartable, framesize
     // 保存旧 fp
     // 移动 fp 到 sp
     vartab = NULL;
+    framesize = 0;
+    fprintf(fout, "  addi $sp, $sp, -4\n");
+    fprintf(fout, "  sw $fp, ($sp)\n");
+    fprintf(fout, "  move $fp, $sp");
     // 可能有误，你可以参考计算机系统基础的教材
-
     assert(0);
 }
 
