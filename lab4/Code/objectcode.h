@@ -1,47 +1,60 @@
 # ifndef __OBJECTCODE_H__
 # define __OBJECTCODE_H__
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include "tree.h"
-#include "semantic.h"
-#include "intercode.h" 
+# include <stdio.h>
+# include <string.h>
+# include <stdlib.h>
+# include <assert.h>
+# include "tree.h"
+# include "semantic.h"
+# include "intercode.h"
+
+# define MAX_REG_NUM 32
 
 extern FILE* fout;
 
-typedef struct Register {
-    char name[10];
-    char var[32];
-} Register;
-
-//1.栈中存储数组的的话，a[0]的地址大于a[1]的地址，即从高地址到低地址放
-//2.调用函数时不额外保存寄存器，将现有寄存器存到临时变量部分统一保存
-//3.维护一个TempVarList来记录当前处理的函数出现的所有临时变量
 typedef struct TempVar* pTempVar;
 typedef struct TempVar {
-    char var[32];
-    int offset;
-    int size;
-    pTempVar next;
-}TempVar;
+    char name[32];
+    int offset;     // 相对 fp 的地址，没有在内存中为 -1
+    int regno;      // 存在几号寄存器中，没有在寄存器中为 -1  
+    pTempVar next;  
+} TempVar;
 
-pTempVar pTempVarList;
+pTempVar vartab; // 当前处理的函数的变量表
 
-Register regs[32];
+typedef struct Register {
+    char name[16];
+    enum {FREE, BUSY} state;
+    pTempVar content;           // 被替换出来时判断是否需要溢出
+} Register;
 
-int spoffset;
+struct Register regs[MAX_REG_NUM];
 
-void compiler(pInterCodes list);
+int framesize;  // 当前栈帧大小, 也即 sp-fp
+ 
+void assemble(pInterCodes list);        // 给 main 调用
+void initregs();                        // 初始化寄存器
+void initframe();                       // 初始化当前函数栈帧
+void formatting(pInterCodes list);      // 打印头部格式化的汇编代码
+int GetRegNo(pOperand op);              // 获得操作数的寄存器号
+int GetAddr(pOperand op);               // 获得操作数在栈中的偏移
+int AllocateReg(pOperand op, pTempVar var); // 分配寄存器
+pTempVar newpTempVar(char* name);
+void insertTempVar(pTempVar ptv);   // 将 ptv 插入到 vartab 的最前面
 
-void InitRegs();
-void PreWork();
-void StoreReg(int n);
-void FirstStore(char* var, int size);
-int GetReg(char* var);
 
+// 各种中间代码的翻译
+void trans2objcode(pInterCodes list);  
+void transASSIGN(pInterCodes list);
+void transADD_SUB(pInterCodes list);
+void transMUL_DIV(pInterCodes list);
+void transGET_ADDR(pInterCodes list);
+void transREAD_ADDR(pInterCodes list);
+void transSTORE_ADDR(pInterCodes list);
+void transIF_GOTO(pInterCodes list);
+void transDEC(pInterCodes list);
+void transREAD(pInterCodes list);
+void transWRITE(pInterCodes list);
 
-
-
-#endif
+# endif

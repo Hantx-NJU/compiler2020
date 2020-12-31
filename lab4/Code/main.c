@@ -2,7 +2,7 @@
 # include "tree.h"
 # include "semantic.h"
 # include "intercode.h"
-# include "objectcode.h" 
+# include "objectcode.h"
 
 extern FILE* yyin;
 extern FILE* fout;
@@ -58,8 +58,8 @@ int main(int argc, char** argv) {
         traverseTree(root);
         // 中间代码生成
         translate(root);
-        // objective code 
-        compiler(intercodeslist);
+        // 目标代码生成
+        assemble(intercodeslist);
         fclose(fout);
     }
     return 0;
