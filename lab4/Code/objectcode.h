@@ -31,10 +31,11 @@ typedef struct Register {
 
 struct Register regs[MAX_REG_NUM];
 
-int framesize;  // 当前栈帧大小, 也即 sp-fp
+int framesize;  // 当前栈帧大小, 也即 fp - sp
  
 void assemble(pInterCodes list);        // 给 main 调用
 void initregs();                        // 初始化寄存器
+void clearregs();
 void initframe();                       // 初始化当前函数栈帧
 void formatting(pInterCodes list);      // 打印头部格式化的汇编代码
 int GetRegNo(pOperand op);              // 获得操作数的寄存器号
@@ -56,5 +57,9 @@ void transIF_GOTO(pInterCodes list);
 void transDEC(pInterCodes list);
 void transREAD(pInterCodes list);
 void transWRITE(pInterCodes list);
+void transARG(pInterCodes list);
+void transCALL(pInterCodes list);
+void transPARAM(pInterCodes list);
+void transRETURN(pInterCodes list);
 
 # endif

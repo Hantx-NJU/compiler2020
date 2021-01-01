@@ -25,18 +25,26 @@ void initregs() {
     }
 }
 
+void clearregs(){
+    for(int i = 8; i <= 25; ++i) {
+        regs[i].state = FREE;
+        regs[i].content = NULL;
+    }
+}
+
 void initframe() {
     // DONE 
     // 重置 vartable, framesize
     // 保存旧 fp
     // 移动 fp 到 sp
+    clearregs();
     vartab = NULL;
     framesize = 0;
     fprintf(fout, "  addi $sp, $sp, -4\n");
     fprintf(fout, "  sw $fp, ($sp)\n");
-    fprintf(fout, "  move $fp, $sp");
+    fprintf(fout, "  move $fp, $sp\n");
     // 可能有误，你可以参考计算机系统基础的教材
-    assert(0);
+    // assert(0);
 }
 
 void formatting(pInterCodes list) {
@@ -134,7 +142,7 @@ int AllocateReg(pOperand op, pTempVar var) {
         var->offset = framesize;
         framesize += 4;
     } 
-    else fprintf(fout,"  sw $%s, %d($fp)\n",regs[change].name,var->offset); // 已经在栈帧中分配了位置
+    else fprintf(fout,"  sw $%s, -%d($fp)\n",regs[change].name,var->offset); // 已经在栈帧中分配了位置
     // 换入
     regs[change].content = var;
     return change;
@@ -181,28 +189,86 @@ void trans2objcode(pInterCodes list) {
     } else if(list->code.kind == CDRETURN) {
         // TODO
         // 恢复寄存器,恢复fp,sp,取出返回地址等, 你也可以自己设计或参考ICS
-        int reg_x = GetRegNo(list->code.u.singleOP.op);
-        fprintf(fout,"  move $v0, $%s\n",regs[reg_x].name);
-        fprintf(fout,"  jr $ra\n");
+        transRETURN(list);
     } else if(list->code.kind == CDDEC) {
         transDEC(list);
     } else if(list->code.kind == CDARG) {
-        // TODO
+        // DONE
+        transARG(list);
         // 传参，参考手册 109 页
         // 这里建议在第一次遇到ARG时，就顺着list把所有参数传入了，这样可能更方便判断哪些放到栈中，哪些放到寄存器中 
-        assert(0);
+        // assert(0);
     } else if(list->code.kind == CDCALL) {
-        // TODO
-        assert(0);
+        // DONE
+        transCALL(list);
+        // assert(0);
     } else if(list->code.kind == CDPARAM) {
-        // TODO
-        assert(0);
+        // DONE
+        transPARAM(list);
+        // assert(0);
     } else if(list->code.kind == CDREAD) {
         transREAD(list);
     } else if(list->code.kind == CDWRITE) {
         transWRITE(list);
     }
     else assert(0);
+}
+
+void transRETURN(pInterCodes list){
+    int reg_x = GetRegNo(list->code.u.singleOP.op);
+    fprintf(fout, "  addi $sp, $sp, %d\n", framesize);
+    fprintf(fout, "  lw $fp, 0($sp)\n");
+    fprintf(fout, "  lw $ra, 4($sp)\n");
+    fprintf(fout, "  addi $sp, $sp, 8\n");
+    fprintf(fout, "  move $v0, $%s\n",regs[reg_x].name);
+    fprintf(fout, "  jr $ra\n");
+}
+
+void transPARAM(pInterCodes list){
+    if(list->prev->code.kind == CDPARAM)    return;
+    int count = 0;
+    while(list->code.kind == CDPARAM){
+        pTempVar p = newpTempVar(list->code.u.singleOP.op->u.name);
+        insertTempVar(p);
+        p->regno = AllocateReg(list->code.u.singleOP.op, p);
+        int n = 8 + 4 * count;
+        fprintf(fout, "  lw $%s, %d($fp)\n", regs[p->regno].name, n);
+        ++count;
+        list = list->next;
+    }
+}
+
+void transCALL(pInterCodes list){
+    fprintf(fout, "  addi $sp, $sp, -4\n");
+    fprintf(fout, "  sw $ra, 0($sp)\n");
+    fprintf(fout, "  jal %s\n", list->code.u.doubleOP.right->u.name);
+    fprintf(fout, "  lw $ra, 0($sp)\n");
+    fprintf(fout, "  addi $sp, $sp, 4\n");
+    int n = GetRegNo(list->code.u.doubleOP.left);
+    fprintf(fout, "  move $%s, $v0\n", regs[n].name);
+}
+
+void transARG(pInterCodes list){
+    if(list->prev->code.kind == CDARG)  return;
+    //all store in stack
+    while(list->code.kind == CDARG){
+        pTempVar p = vartab;
+        for(; p; p = p->next)
+            if(p->regno == -1)  continue;
+            if(p->offset == -1){
+                fprintf(fout,"  addi $sp, $sp, -4\n"); 
+                fprintf(fout,"  sw $%s, 0($sp)\n",regs[p->regno].name);     // 存到栈顶
+                p->offset = framesize;
+                framesize += 4;
+            }
+            else fprintf(fout,"  sw $%s, -%d($fp)\n",regs[p->regno].name,p->offset);
+    }
+        clearregs();
+        fprintf(fout, "  addi $sp, $sp, -4\n");
+        framesize += 4;
+        int no = GetRegNo(list->code.u.singleOP.op);
+        fprintf(fout, "  sw $%s, ($sp)\n", regs[no].name);
+        list = list->next;
 }
 
 void transASSIGN(pInterCodes list) {
@@ -306,7 +372,7 @@ void transREAD(pInterCodes list) {
     fprintf(fout,"  lw $ra, 0($sp)\n");
     fprintf(fout,"  addi $sp, $sp, 4\n");
     int reg_x = GetRegNo(list->code.u.singleOP.op);
-    fprintf(fout,"  move %s, $v0\n",regs[reg_x].name);
+    fprintf(fout,"  move $%s, $v0\n",regs[reg_x].name);
 }
 
 void transWRITE(pInterCodes list) {
