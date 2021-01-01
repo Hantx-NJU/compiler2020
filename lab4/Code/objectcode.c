@@ -82,7 +82,7 @@ int GetRegNo(pOperand op) {
         fprintf(fout,"  li $%s, %d\n",regs[no].name,op->u.val);
         return no;
     }
-    // if(op->kind == OPTEMP) sprintf(op->u.name,"t%d",op->u.no);
+    if(op->kind == OPTEMP) sprintf(op->u.name,"t%d",op->u.no);
     for(pTempVar iter = vartab; iter != NULL; iter = iter->next) {
         if(strcmp(op->u.name, iter->name) == 0) {
             if(iter->regno == -1) {
