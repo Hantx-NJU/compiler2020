@@ -41,7 +41,7 @@ void initframe() {
     vartab = NULL;
     framesize = 0;
     fprintf(fout, "  addi $sp, $sp, -4\n");
-    fprintf(fout, "  sw $fp, ($sp)\n");
+    fprintf(fout, "  sw $fp, 0($sp)\n");
     fprintf(fout, "  move $fp, $sp\n");
     // 可能有误，你可以参考计算机系统基础的教材
     // assert(0);
@@ -82,10 +82,14 @@ int GetRegNo(pOperand op) {
         fprintf(fout,"  li $%s, %d\n",regs[no].name,op->u.val);
         return no;
     }
-    if(op->kind == OPTEMP) sprintf(op->u.name,"t%d",op->u.no);
+    // if(op->kind == OPTEMP) sprintf(op->u.name,"t%d",op->u.no);
     for(pTempVar iter = vartab; iter != NULL; iter = iter->next) {
         if(strcmp(op->u.name, iter->name) == 0) {
-            if(iter->regno == -1) iter->regno = AllocateReg(op,iter);
+            if(iter->regno == -1) {
+                iter->regno = AllocateReg(op,iter);
+                if(iter->offset != -1)  
+                    fprintf(fout, "  lw $%s, -%d($fp)\n", regs[iter->regno].name, iter->offset);
+            }
             return iter->regno;
         }
     }
@@ -169,6 +173,8 @@ void trans2objcode(pInterCodes list) {
         fprintf(fout,"label%d:\n",list->code.u.singleOP.op->u.no);
     } else if(list->code.kind == CDFUNCTION) {
         fprintf(fout,"\n%s:\n",list->code.u.singleOP.op->u.name);
+        if(strcmp(list->code.u.singleOP.op->u.name, "main") == 0)   isMain = 1;
+        else    isMain = 0;
         initframe();    // 为这个函数初始化栈帧
     } else if(list->code.kind == CDASSIGN) {
         transASSIGN(list);
@@ -216,10 +222,16 @@ void trans2objcode(pInterCodes list) {
 
 void transRETURN(pInterCodes list){
     int reg_x = GetRegNo(list->code.u.singleOP.op);
-    fprintf(fout, "  addi $sp, $sp, %d\n", framesize);
+    if(framesize > 0)
+        fprintf(fout, "  addi $sp, $sp, %d\n", framesize);
     fprintf(fout, "  lw $fp, 0($sp)\n");
-    fprintf(fout, "  lw $ra, 4($sp)\n");
-    fprintf(fout, "  addi $sp, $sp, 8\n");
+    // if(isMain == 0){
+    //     fprintf(fout, "  lw $ra, 4($sp)\n");
+    //     fprintf(fout, "  addi $sp, $sp, 8\n");
+    // }
+    // else{
+    fprintf(fout, "  addi $sp, $sp, 4\n");
+    // }
     fprintf(fout, "  move $v0, $%s\n",regs[reg_x].name);
     fprintf(fout, "  jr $ra\n");
 }
@@ -239,6 +251,8 @@ void transPARAM(pInterCodes list){
 }
 
 void transCALL(pInterCodes list){
+    if(hasArg != 1) storeregs();
+    hasArg = 0;
     fprintf(fout, "  addi $sp, $sp, -4\n");
     fprintf(fout, "  sw $ra, 0($sp)\n");
     fprintf(fout, "  jal %s\n", list->code.u.doubleOP.right->u.name);
@@ -252,25 +266,31 @@ void transARG(pInterCodes list){
     if(list->prev->code.kind == CDARG)  return;
     //all store in stack
     while(list->code.kind == CDARG){
-        pTempVar p = vartab;
-        for(; p; p = p->next)
+        hasArg = 1;
+        storeregs();
+        fprintf(fout, "  addi $sp, $sp, -4\n");
+        framesize += 4;
+        int no = GetRegNo(list->code.u.singleOP.op);
+        fprintf(fout, "  sw $%s, 0($sp)\n", regs[no].name);
+        list = list->next;
+    }
+}
+
+void storeregs(){
+    pTempVar p = vartab;
+        for(; p; p = p->next){
             if(p->regno == -1)  continue;
             if(p->offset == -1){
                 fprintf(fout,"  addi $sp, $sp, -4\n"); 
                 fprintf(fout,"  sw $%s, 0($sp)\n",regs[p->regno].name);     // 存到栈顶
-                p->offset = framesize;
                 framesize += 4;
+                p->offset = framesize;
             }
             else fprintf(fout,"  sw $%s, -%d($fp)\n",regs[p->regno].name,p->offset);
-    }
+            p->regno = -1;
+        }
         clearregs();
-        fprintf(fout, "  addi $sp, $sp, -4\n");
-        framesize += 4;
-        int no = GetRegNo(list->code.u.singleOP.op);
-        fprintf(fout, "  sw $%s, ($sp)\n", regs[no].name);
-        list = list->next;
 }
-
 void transASSIGN(pInterCodes list) {
     if(list->code.u.doubleOP.right->kind == OPCONSTANT) {
         int reg_x = GetRegNo(list->code.u.doubleOP.left);
@@ -352,7 +372,6 @@ void transIF_GOTO(pInterCodes list) {
         fprintf(fout,"  ble $%s, $%s, label%d\n",regs[reg_x].name,regs[reg_y].name,list->code.u.if_gotoOP.label->u.no);
     }
 }
-
 
 void transDEC(pInterCodes list) {
     // 将数组插入临时变量表
