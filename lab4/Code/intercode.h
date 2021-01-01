@@ -14,7 +14,7 @@ FILE* fout;
 typedef struct Operand* pOperand;
 typedef struct Operand{
     enum {OPVARIABLE, OPCONSTANT, OPTEMP, OPLABEL, OPFUNCTION, OPADDRESS, OPSTRUCTURE, OPARRAY} kind;
-    union{
+    struct{
         int no;          // TEMP, LABEL
         int val;         // CONSTANT
         char name[32];   // FUNCTION, VARIABLE, ADDRESS, STRUCTURE, ARRAY (由于不重名，直接用符号表中的名字)

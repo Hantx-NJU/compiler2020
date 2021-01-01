@@ -133,7 +133,7 @@ int AllocateReg(pOperand op, pTempVar var) {
     // 选择换入换出寄存器
     int change = -1;
     for(int i = 8; i <= 25; ++i) {
-        if(regs->content->name[0] == 't'){   // 优先换出 OPTEAMP
+        if(regs[i].content->name[0] == 't'){   // 优先换出 OPTEAMP
             change = i;
             break;
         }
@@ -309,6 +309,12 @@ void transADD_SUB(pInterCodes list) {
         int reg_x = GetRegNo(list->code.u.tripleOP.result);
         int reg_y = GetRegNo(list->code.u.tripleOP.op1);
         int reg_z = GetRegNo(list->code.u.tripleOP.op2);
+        assert(reg_x >= 8);
+        assert(reg_x <= 25);
+        assert(reg_y >= 8);
+        assert(reg_y <= 25);
+        assert(reg_z >= 8);
+        assert(reg_z <= 25);
         if(list->code.kind == CDADD)
             fprintf(fout,"  add $%s, $%s, $%s\n",regs[reg_x].name,regs[reg_y].name,regs[reg_z].name);
         else  fprintf(fout,"  sub $%s, $%s, $%s\n",regs[reg_x].name,regs[reg_y].name,regs[reg_z].name);
@@ -327,6 +333,12 @@ void transMUL_DIV(pInterCodes list) {
     int reg_x = GetRegNo(list->code.u.tripleOP.result);
     int reg_y = GetRegNo(list->code.u.tripleOP.op1);
     int reg_z = GetRegNo(list->code.u.tripleOP.op2);
+    assert(reg_x >= 8);
+    assert(reg_x <= 25);
+    assert(reg_y >= 8);
+    assert(reg_y <= 25);
+    assert(reg_z >= 8);
+    assert(reg_z <= 25);
     if(list->code.kind == CDMUL)
         fprintf(fout,"  mul $%s, $%s, $%s\n",regs[reg_x].name,regs[reg_y].name,regs[reg_z].name);
     else {

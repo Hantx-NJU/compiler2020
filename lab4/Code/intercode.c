@@ -5,8 +5,8 @@ void translate(Node* root) {
     if(root != NULL) {
         translate_Program(root);
         /* we need not to show intercodes in lab4*/
-        ShowAllInterCodes(intercodeslist);
-        fprintf(fout,"\n\n");    
+        // ShowAllInterCodes(intercodeslist);
+        // fprintf(fout,"\n\n");    
     }
 }
 
