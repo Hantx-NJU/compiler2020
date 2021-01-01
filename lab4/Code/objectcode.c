@@ -132,22 +132,24 @@ int AllocateReg(pOperand op, pTempVar var) {
     }
     // 选择换入换出寄存器
     int change = -1;
-    for(int i = 8; i <= 25; ++i) {
-        if(regs[i].content->name[0] == 't'){   // 优先换出 OPTEAMP
-            change = i;
-            break;
-        }
-    }
+    // for(int i = 8; i <= 25; ++i) {
+    //     if(regs[i].content->name[0] == 't'){   // 优先换出 OPTEAMP
+    //         change = i;
+    //         break;
+    //     }
+    // }
     if(change == -1) change = rand() % 18 + 8;    // 随机选出一个替换
     // 换出(溢出到内存)
-    if(var->offset == -1) { // 没有在栈帧中则分配位置, 并溢出
+    if(regs[change].content->offset == -1) { // 没有在栈帧中则分配位置, 并溢出
         fprintf(fout,"  addi $sp, $sp, -4\n"); 
         fprintf(fout,"  sw $%s, 0($sp)\n",regs[change].name);     // 存到栈顶
-        var->offset = framesize;
         framesize += 4;
+        regs[change].content->offset = framesize;
+        // framesize += 4;
     } 
-    else fprintf(fout,"  sw $%s, -%d($fp)\n",regs[change].name,var->offset); // 已经在栈帧中分配了位置
+    else {fprintf(fout,"  sw $%s, -%d($fp)\n",regs[change].name, regs[change].content->offset);} // 已经在栈帧中分配了位置
     // 换入
+    regs[change].content->regno = -1;
     regs[change].content = var;
     return change;
 }
@@ -285,6 +287,7 @@ void storeregs(){
                 fprintf(fout,"  sw $%s, 0($sp)\n",regs[p->regno].name);     // 存到栈顶
                 framesize += 4;
                 p->offset = framesize;
+                // framesize += 4;
             }
             else fprintf(fout,"  sw $%s, -%d($fp)\n",regs[p->regno].name,p->offset);
             p->regno = -1;
@@ -309,12 +312,6 @@ void transADD_SUB(pInterCodes list) {
         int reg_x = GetRegNo(list->code.u.tripleOP.result);
         int reg_y = GetRegNo(list->code.u.tripleOP.op1);
         int reg_z = GetRegNo(list->code.u.tripleOP.op2);
-        assert(reg_x >= 8);
-        assert(reg_x <= 25);
-        assert(reg_y >= 8);
-        assert(reg_y <= 25);
-        assert(reg_z >= 8);
-        assert(reg_z <= 25);
         if(list->code.kind == CDADD)
             fprintf(fout,"  add $%s, $%s, $%s\n",regs[reg_x].name,regs[reg_y].name,regs[reg_z].name);
         else  fprintf(fout,"  sub $%s, $%s, $%s\n",regs[reg_x].name,regs[reg_y].name,regs[reg_z].name);
@@ -333,12 +330,6 @@ void transMUL_DIV(pInterCodes list) {
     int reg_x = GetRegNo(list->code.u.tripleOP.result);
     int reg_y = GetRegNo(list->code.u.tripleOP.op1);
     int reg_z = GetRegNo(list->code.u.tripleOP.op2);
-    assert(reg_x >= 8);
-    assert(reg_x <= 25);
-    assert(reg_y >= 8);
-    assert(reg_y <= 25);
-    assert(reg_z >= 8);
-    assert(reg_z <= 25);
     if(list->code.kind == CDMUL)
         fprintf(fout,"  mul $%s, $%s, $%s\n",regs[reg_x].name,regs[reg_y].name,regs[reg_z].name);
     else {
@@ -388,11 +379,12 @@ void transIF_GOTO(pInterCodes list) {
 void transDEC(pInterCodes list) {
     // 将数组插入临时变量表
     pTempVar p = newpTempVar(list->code.u.decOP.op->u.name);
+    framesize += list->code.u.decOP.size;
     p->offset = framesize;
     insertTempVar(p);
     // 在栈帧中分配空间
     fprintf(fout,"  addi $sp, $sp, -%d\n",list->code.u.decOP.size);
-    framesize += list->code.u.decOP.size;
+    // framesize += list->code.u.decOP.size;
 }
 
 void transREAD(pInterCodes list) {
