@@ -1,5 +1,0 @@
-int main() {
-  int a, b;
-  b = 0;
-  a = b + 1;
-}

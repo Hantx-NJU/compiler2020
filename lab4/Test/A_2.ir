@@ -1,0 +1,109 @@
+FUNCTION main :
+DEC tttfunc 512
+READ t2
+a := t2
+t0 := a
+READ t5
+b := t5
+t3 := b
+READ t8
+c := t8
+t6 := c
+t9 := a + b
+IF t9 > c GOTO label4
+GOTO label1
+LABEL label4 :
+t13 := b + c
+IF t13 > a GOTO label3
+GOTO label1
+LABEL label3 :
+t17 := a + c
+IF t17 > b GOTO label0
+GOTO label1
+LABEL label0 :
+t24 := a + b
+t23 := t24 + c
+cirf := t23
+t21 := cirf
+IF a == b GOTO label8
+GOTO label6
+LABEL label8 :
+IF a == c GOTO label5
+GOTO label6
+LABEL label5 :
+type := #1
+t32 := type
+GOTO label7
+LABEL label6 :
+IF a == b GOTO label9
+GOTO label13
+LABEL label13 :
+IF a == c GOTO label9
+GOTO label12
+LABEL label12 :
+IF b == c GOTO label9
+GOTO label10
+LABEL label9 :
+type := #2
+t41 := type
+GOTO label11
+LABEL label10 :
+t44 := #0
+t47 := a * a
+t48 := b * b
+t45 := t47 + t48
+t46 := c * c
+IF t45 == t46 GOTO label19
+GOTO label20
+LABEL label19 :
+t44 := #1
+LABEL label20 :
+IF t44 != #0 GOTO label14
+GOTO label18
+LABEL label18 :
+t55 := #0
+t58 := a * a
+t59 := c * c
+t56 := t58 + t59
+t57 := b * b
+IF t56 == t57 GOTO label21
+GOTO label22
+LABEL label21 :
+t55 := #1
+LABEL label22 :
+IF t55 != #0 GOTO label14
+GOTO label17
+LABEL label17 :
+t66 := #0
+t69 := b * b
+t70 := c * c
+t67 := t69 + t70
+t68 := a * a
+IF t67 == t68 GOTO label23
+GOTO label24
+LABEL label23 :
+t66 := #1
+LABEL label24 :
+IF t66 != #0 GOTO label14
+GOTO label15
+LABEL label14 :
+type := #3
+t77 := type
+GOTO label16
+LABEL label15 :
+type := #0
+t80 := type
+LABEL label16 :
+LABEL label11 :
+LABEL label7 :
+WRITE type
+WRITE cirf
+GOTO label2
+LABEL label1 :
+t88 := #0 - #1
+WRITE t88
+LABEL label2 :
+RETURN #0
+
+
+

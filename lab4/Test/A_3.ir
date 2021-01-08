@@ -1,0 +1,73 @@
+FUNCTION main :
+DEC tttfunc 236
+tu1 := #1
+t0 := tu1
+tu2 := #1
+t3 := tu2
+READ t8
+m := t8
+t6 := m
+IF m < #1 GOTO label0
+GOTO label1
+LABEL label0 :
+WRITE #0
+GOTO label2
+LABEL label1 :
+IF m == #1 GOTO label3
+GOTO label6
+LABEL label6 :
+IF m == #2 GOTO label3
+GOTO label4
+LABEL label3 :
+WRITE #1
+GOTO label5
+LABEL label4 :
+IF m > #2 GOTO label7
+GOTO label8
+LABEL label7 :
+i := #3
+t21 := i
+LABEL label9 :
+IF i <= m GOTO label10
+GOTO label11
+LABEL label10 :
+t28 := tu1 + tu2
+tu3 := t28
+t26 := tu3
+tu1 := tu2
+t31 := tu1
+tu2 := tu3
+t34 := tu2
+t39 := i + #1
+i := t39
+t37 := i
+GOTO label9
+LABEL label11 :
+WRITE tu3
+LABEL label8 :
+LABEL label5 :
+LABEL label2 :
+RETURN #0
+
+
+.data
+_prompt: .asciiz "Enter an integer:"
+_ret: .asciiz "\n"
+.globl main
+.text
+read:
+  li $v0, 4
+  la $a0, _prompt
+  syscall
+  li $v0, 5
+  syscall
+  jr $ra
+
+write:
+  li $v0, 1
+  syscall
+  li $v0, 4
+  la $a0, _ret
+  syscall
+  move $v0, $0
+  jr $ra

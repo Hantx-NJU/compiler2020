@@ -35,8 +35,10 @@ void translate_ExtDef(Node* node) {
         // Do Nothing
     }
     else if(strcmp(node->children[1]->name, "FunDec") == 0) {   // ExtDef -> Specifier FunDec CompSt
-        pInterCodes p1 = translate_FunDec(node->children[1]);
+        global_vt_no = 0;
         pInterCodes p2 = translate_CompSt(node->children[2]);
+        pInterCodes p1 = translate_FunDec(node->children[1]);
+        
         // 连接 p1，p2 到 intercodeslist 上面
         intercodeslist = AddInterCodesList(intercodeslist,p1);
         intercodeslist = AddInterCodesList(intercodeslist,p2);
@@ -50,6 +52,10 @@ pInterCodes translate_FunDec(Node* node) {
     assert(hashtable[index]->type->kind == FUNCTION);
     pOperand op1 = new_pOperand(OPFUNCTION,-1,-1,hashtable[index]->name);
     pInterCodes p = new_pInterCodes(CDFUNCTION,op1,NULL,NULL,NULL,-1);
+    pOperand op = new_pOperand(OPARRAY,-1,-1,"tttfunc");
+    pInterCodes p1 = new_pInterCodes(CDDEC,op,NULL,NULL,NULL,global_vt_no * 4);
+    p = AddInterCodesList(p, p1);
+    
     if(node->childSum == 4) {       // FunDec -> ID LP VarList RP
         pFieldList iter = hashtable[index]->type->u.function.argv;
         while(iter != NULL) {
@@ -212,14 +218,34 @@ pInterCodes translate_VarDec(Node* node) {
         int index = lookup(node->children[0]->text);
         pFieldList pf = hashtable[index];
         if(pf->type->kind == ARRAY) {
+            //create array
+            // fprintf(fout, "%s\n", pf->name);
             pOperand op = new_pOperand(OPARRAY,-1,-1,pf->name);
             int size = getSize(pf->type);
-            return new_pInterCodes(CDDEC,op,NULL,NULL,NULL,size);
+            size = size / 4;
+            for(int i = 0; i < size; ++i){
+                op->num = global_vt_no;
+                ++global_vt_no;
+            }
+            for(int i = 0; i < namenum && i < 100; ++i){
+                // fprintf(fout,"BBB%s %s %d\n",place->u.name,varlist[i].name, varlist[i].num);
+                if(strcmp(varlist[i].name, pf->name) == 0){
+                    // fprintf(fout,"AAA%s %d\n",place->u.name, varlist[i].num);
+                    varlist[i].num = op->num;
+                    break;
+                }
+            }
+            // fprintf(fout, "%d\n", op->num);
+            return new_pInterCodes(CDDEC,op,NULL,NULL,NULL,0);
         }
         else if(pf->type->kind == STRUCTURE) {
             pOperand op = new_pOperand(OPSTRUCTURE,-1,-1,pf->name);
             int size = getSize(pf->type);
-            return new_pInterCodes(CDDEC,op,NULL,NULL,NULL,size);
+            size = size / 4;
+            for(int i = 0; i < size; ++i){
+                ++global_vt_no;
+            }
+            return new_pInterCodes(CDDEC,op,NULL,NULL,NULL,0);
         }
     }
     else if(node->childSum == 4) { // VarDec -> VarDec LB INT RB
@@ -239,11 +265,60 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
         int index = lookup(node->children[0]->text);
         pFieldList pf = hashtable[index];
         strcpy(place->u.name,pf->name);
-        if(pf->type->kind == BASIC) place->kind = OPVARIABLE;
-        else if(pf->type->kind == ARRAY) place->kind = OPARRAY;
+        if(pf->type->kind == BASIC) {
+            place->kind = OPVARIABLE;
+            int flag = 0;
+            for(int i = 0; i < namenum && i < 100; ++i){
+                // fprintf(fout,"%s %s %d\n",place->u.name,varlist[i].name, varlist[i].num);
+                if(strcmp(varlist[i].name, place->u.name) == 0){
+                    // fprintf(fout,"%s %d\n",place->u.name, varlist[i].num);
+                    place->num = varlist[i].num;
+                    flag = 1;
+                    break;
+                }
+            }
+            if(flag == 0){
+                varlist[namenum].num = place->num;
+                strcpy(varlist[namenum].name, place->u.name);
+                ++namenum;
+            }
+        }
+        else if(pf->type->kind == ARRAY){ 
+            place->kind = OPARRAY;
+            int flag = 0;
+            for(int i = 0; i < namenum && i < 100; ++i){
+                // fprintf(fout,"BBB%s %s %d\n",place->u.name,varlist[i].name, varlist[i].num);
+                if(strcmp(varlist[i].name, place->u.name) == 0){
+                    // fprintf(fout,"AAA%s %d\n",place->u.name, varlist[i].num);
+                    place->num = varlist[i].num;
+                    flag = 1;
+                    break;
+                }
+            }
+            if(flag == 0){
+                varlist[namenum].num = place->num;
+                strcpy(varlist[namenum].name, place->u.name);
+                ++namenum;
+            }
+        }
         else if(pf->type->kind == STRUCTURE) {
             if(isArg(pf)) { // isArg 问的是是否是形参(而不是实参)
                 place->kind = OPADDRESS;
+                int flag = 0;
+                for(int i = 0; i < namenum && i < 100; ++i){
+                    // fprintf(fout,"%s %s %d\n",place->u.name,varlist[i].name, varlist[i].num);
+                    if(strcmp(varlist[i].name, place->u.name) == 0){
+                        // fprintf(fout,"%s %d\n",place->u.name, varlist[i].num);
+                        place->num = varlist[i].num;
+                        flag = 1;
+                        break;
+                    }
+                }
+                if(flag == 0){
+                    varlist[namenum].num = place->num;
+                    strcpy(varlist[namenum].name, place->u.name);
+                    ++namenum;
+                }
             } 
             else place->kind = OPSTRUCTURE;
         }
@@ -417,6 +492,22 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
         pInterCodes code4 = new_pInterCodes(CDADD,target,base,offset,NULL,-1);
         place->kind = OPADDRESS;
         strcpy(place->u.name,target->u.name);
+        int flag = 0;
+        for(int i = 0; i < namenum && i < 100; ++i){
+            // fprintf(fout,"BBB%s %s %d\n",place->u.name,varlist[i].name, varlist[i].num);
+            if(strcmp(varlist[i].name, place->u.name) == 0){
+                // fprintf(fout,"AAA%s %d\n",place->u.name, varlist[i].num);
+                place->num = varlist[i].num;
+                flag = 1;
+                break;
+            }
+        }
+        if(flag == 0){
+            varlist[namenum].num = place->num;
+            strcpy(varlist[namenum].name, place->u.name);
+            ++namenum;
+        }
+        
         if(hashtable[hashindex]->type->u.array.elem->kind == STRUCTURE) place->saddr = 1;
         pInterCodes code = AddInterCodesList(code1,code2);
         code = AddInterCodesList(code,code3);
@@ -436,6 +527,21 @@ pInterCodes translate_Exp(Node* node, pOperand place) {
         int index = lookup(node->children[2]->text);
         int offset = getoffset(hashtable[index]);
         place->kind = OPADDRESS;
+        int flag = 0;
+        for(int i = 0; i < namenum && i < 100; ++i){
+            // fprintf(fout,"%s %s %d\n",place->u.name,varlist[i].name, varlist[i].num);
+            if(strcmp(varlist[i].name, place->u.name) == 0){
+                // fprintf(fout,"%s %d\n",place->u.name, varlist[i].num);
+                place->num = varlist[i].num;
+                flag = 1;
+                break;
+            }
+        }
+        if(flag == 0){
+            varlist[namenum].num = place->num;
+            strcpy(varlist[namenum].name, place->u.name);
+            ++namenum;
+        }
         char buffer[32];
         sprintf(buffer, "%d", place->u.no);
         strcpy(place->u.name,newString("t",buffer));
@@ -546,9 +652,11 @@ pOperand new_label() {
 void init() {
     global_temp_no = 0;
     global_label_no = 0;
+    namenum = 0;
     intercodeslist = (pInterCodes)calloc(1, sizeof(InterCodes));
     intercodeslist->next = intercodeslist;      // 虚假的头
     intercodeslist->prev = intercodeslist;
+    // varnamelist = (pVarnames)calloc(1, sizeof(Varnames));
 }
 
 void ShowAllInterCodes(pInterCodes list) {
@@ -565,6 +673,7 @@ void ShowInterCode(pInterCodes p) {
         fprintf(fout,"LABEL ");
         ShowOperand(p->code.u.singleOP.op);
         fprintf(fout," :");
+        // fprintf(fout,"\n %d \n", p->code.u.singleOP.op->num);
     }
     else if(p->code.kind == CDFUNCTION) {
         fprintf(fout,"FUNCTION ");
@@ -640,6 +749,7 @@ void ShowInterCode(pInterCodes p) {
         fprintf(fout,"DEC ");
         ShowOperand(p->code.u.decOP.op);
         fprintf(fout," %d", p->code.u.decOP.size);
+        // fprintf(fout,"\n %d \n", p->code.u.decOP.op->num);
     }
     else if(p->code.kind == CDARG) {
         fprintf(fout,"ARG ");
@@ -742,10 +852,30 @@ pInterCodes new_pInterCodes(int kind, pOperand op1, pOperand op2, pOperand op3, 
 }
 
 pOperand new_pOperand(int kind, int no, int val, char* name) {
+    global_vt_no += 1;
     pOperand p = (pOperand)calloc(1, sizeof(Operand));
     p->kind = kind;
     p->u.no = -1;
     p->u.val = -1;
+    p->num = global_vt_no;
+    if(name){
+        // fprintf(fout,"%s\n",name);
+        int flag = 0;
+        for(int i = 0; i < namenum && i < 100; ++i){
+            // fprintf(fout,"%s %s %d\n",name,varlist[i].name, varlist[i].num);
+            if(strcmp(varlist[i].name, name) == 0){
+                // fprintf(fout,"%s %d\n",name, varlist[i].num);
+                p->num = varlist[i].num;
+                flag = 1;
+                break;
+            }
+        }
+        if(flag == 0){
+            varlist[namenum].num = p->num;
+            strcpy(varlist[namenum].name, name);
+            ++namenum;
+        }
+    }
     if(kind == OPTEMP || kind == OPLABEL) p->u.no = no;
     else if(kind == OPCONSTANT) p->u.val = val;
     else if(kind == OPFUNCTION || kind == OPVARIABLE || kind == OPADDRESS || kind == OPSTRUCTURE || kind == OPARRAY) strcpy(p->u.name,name);

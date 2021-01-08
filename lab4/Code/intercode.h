@@ -7,6 +7,7 @@
 # include <assert.h>
 # include "tree.h"
 # include "semantic.h"
+#include "malloc.h"
 
 
 FILE* fout;
@@ -20,7 +21,18 @@ typedef struct Operand{
         char name[32];   // FUNCTION, VARIABLE, ADDRESS, STRUCTURE, ARRAY (由于不重名，直接用符号表中的名字)
     } u;
     int saddr;
+    int num;
 } Operand;
+
+typedef struct Varnames* pVarnames;
+typedef struct Varnames{
+    char name[32];
+    int num;
+    // pVarnames next;
+}Varnames;
+struct Varnames varlist[100];
+int namenum;
+pVarnames varnamelist;
 
 typedef struct InterCode* pInterCode;
 typedef struct InterCode {
@@ -93,6 +105,7 @@ pInterCodes translate_Cond(Node* node, pOperand label_true, pOperand label_false
 // 其他翻译函数
 int global_temp_no;
 int global_label_no;
+int global_vt_no;
 pOperand new_temp();
 pOperand new_label();
 
